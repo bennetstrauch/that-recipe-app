@@ -1,5 +1,6 @@
 package com.plcoding.bookpedia.recipe.presentation.recipe_detail
 
+import com.plcoding.bookpedia.core.presentation.UiText
 import com.plcoding.bookpedia.recipe.domain.RecipeHeader
 import com.plcoding.bookpedia.recipe.domain.RecipeVersion
 
@@ -12,5 +13,6 @@ data class RecipeDetailState(
     val checkedIngredientIds: Set<String> = emptySet(),
     val checkedStepIds: Set<String> = emptySet(),
     // Map of <InstructionStep.id, RemainingSeconds>
-    val runningTimers: Map<String, Long> = emptyMap()
+    val runningTimers: Map<String, Long> = emptyMap(),
+    val errorMessage: UiText? = null
 )

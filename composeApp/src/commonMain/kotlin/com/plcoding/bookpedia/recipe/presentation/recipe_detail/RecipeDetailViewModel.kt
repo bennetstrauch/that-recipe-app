@@ -3,6 +3,9 @@ package com.plcoding.bookpedia.recipe.presentation.recipe_detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.plcoding.bookpedia.core.domain.onError
+import com.plcoding.bookpedia.core.domain.onSuccess
+import com.plcoding.bookpedia.core.presentation.toUiText
 import com.plcoding.bookpedia.recipe.domain.RecipeRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -47,19 +50,50 @@ class RecipeDetailViewModel(
     private fun loadRecipeDetails(headerId: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
-            // Fetch both header and all its versions from the repository
-            val header = recipeRepository.getRecipeHeaderById(headerId)
-            val versions = recipeRepository.getVersionsForRecipe(headerId)
 
-            _state.update {
-                it.copy(
-                    isLoading = false,
-                    recipeHeader = header,
-                    allVersions = versions,
-                    // Select the first version by default (or the one marked as "Original")
-                    selectedVersion = versions.firstOrNull()
-                )
-            }
+            // Step 1: Fetch the Recipe Header
+            recipeRepository.getRecipeHeaderById(headerId)
+                .onSuccess { header ->
+                    if (header == null) {
+                        // Handle case where header is not found
+                        _state.update { it.copy(isLoading = false, recipeHeader = null) }
+                        return@onSuccess
+                    }
+
+                    // Step 2: If header is found, fetch its versions
+                    recipeRepository.getVersionsForRecipe(headerId)
+                        .onSuccess { versions ->
+                            // Both header and versions were fetched successfully
+                            _state.update {
+                                it.copy(
+                                    isLoading = false,
+                                    recipeHeader = header,
+                                    allVersions = versions,
+                                    // Select the most recent version as default
+                                    selectedVersion = versions.firstOrNull()
+                                )
+                            }
+                        }
+                        .onError { error ->
+                            // Failed to fetch versions
+                            _state.update {
+                                it.copy(
+                                    isLoading = false,
+                                    recipeHeader = header, // Still show header info
+                                    errorMessage = error.toUiText()
+                                )
+                            }
+                        }
+                }
+                .onError { error ->
+                    // Failed to fetch the main recipe header
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.toUiText()
+                        )
+                    }
+                }
         }
     }
 
