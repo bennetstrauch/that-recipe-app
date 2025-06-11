@@ -10,6 +10,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailScreenRoot
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailViewModel
+import com.plcoding.bookpedia.recipe.presentation.recipe_edit.RecipeEditScreenRoot
+import com.plcoding.bookpedia.recipe.presentation.recipe_edit.RecipeEditViewModel
 import com.plcoding.bookpedia.recipe.presentation.recipe_list.RecipeListScreenRoot
 import com.plcoding.bookpedia.recipe.presentation.recipe_list.RecipeListViewModel
 
@@ -57,10 +59,25 @@ fun App() {
                     },
                     onEditClick = { recipeHeaderId ->
                         // TODO: Navigate to an edit screen later
-                        // navController.navigate(RecipeEdit(recipeHeaderId))
+                         navController.navigate(RecipeEdit(recipeHeaderId))
                     }
                 )
             }
+
+            composable<RecipeEdit>(
+                enterTransition = { slideInHorizontally { initialOffset -> initialOffset } },
+                exitTransition = { slideOutHorizontally { initialOffset -> initialOffset } }
+            ) {
+                val viewModel = koinViewModel<RecipeEditViewModel>()
+
+                RecipeEditScreenRoot(
+                    viewModel = viewModel,
+                    onBackClick = {
+                        navController.navigateUp()
+                    }
+                )
+            }
+
         }
     }
 }

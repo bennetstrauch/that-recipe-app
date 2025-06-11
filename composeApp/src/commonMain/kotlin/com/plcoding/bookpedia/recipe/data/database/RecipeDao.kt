@@ -11,8 +11,32 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface RecipeDao {
 
-    // --- Write Operations for Seeding/Saving ---
+    // --- Transactional Write Operation ---
+    @Transaction
+    suspend fun saveFullVersion(
+        header: RecipeHeaderEntity,
+        version: RecipeVersionEntity,
+        ingredients: List<IngredientEntity>,
+        steps: List<InstructionStepEntity>
+    ) {
+        upsertRecipeHeader(header)
+        upsertRecipeVersion(version)
+        // #todo really needed?: You might want to delete old ingredients/steps for this version before upserting
+        deleteIngredientsForVersion(version.id)
+        deleteStepsForVersion(version.id)
+        upsertIngredients(ingredients)
+        upsertInstructionSteps(steps)
+    }
 
+    // --- Helper Deletes for the Transaction ---
+    @Query("DELETE FROM IngredientEntity WHERE recipeVersionId = :versionId")
+    suspend fun deleteIngredientsForVersion(versionId: String)
+
+    @Query("DELETE FROM InstructionStepEntity WHERE recipeVersionId = :versionId")
+    suspend fun deleteStepsForVersion(versionId: String)
+
+
+    // --- Write Operations for Seeding/Saving ---
     @Upsert
     suspend fun upsertCategories(categories: List<CategoryEntity>)
 
@@ -36,7 +60,6 @@ interface RecipeDao {
 
 
     // --- Read Operations ---
-
     @Transaction
     @Query("SELECT * FROM RecipeHeaderEntity ORDER BY title ASC")
     suspend fun getRecipeHeadersWithCategory(): List<RecipeHeaderWithCategory>

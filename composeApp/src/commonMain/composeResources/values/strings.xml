@@ -23,4 +23,5 @@
     <string name="error_no_internet">Couldn't reach server, please check your internet connection.</string>
     <string name="error_too_many_requests">Your quota seems to be exceeded.</string>
     <string name="error_serialization">Couldn't parse data.</string>
+    <string name="error_validation_fields_empty">Please make sure all required fields are filled out.</string>
 </resources>

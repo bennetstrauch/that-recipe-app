@@ -5,7 +5,7 @@ package com.plcoding.bookpedia.recipe.data
 import com.plcoding.bookpedia.recipe.data.database.*
 import com.plcoding.bookpedia.recipe.domain.*
 
-// --- Mappers from Database to Domain ---
+// --- Mappers from Database Entity to Domain Model ---
 
 fun RecipeHeaderWithCategory.toDomain(): RecipeHeader {
     return RecipeHeader(
@@ -15,21 +15,6 @@ fun RecipeHeaderWithCategory.toDomain(): RecipeHeader {
         imageUrl = header.imageUrl,
         defaultPrepTimeMinutes = header.defaultPrepTimeMinutes,
         isFavorite = header.isFavorite
-    )
-}
-
-// Helper mapper for a single IngredientEntity.
-// Note: This CANNOT create the full domain object on its own.
-// The repository will use this and combine it with other DAO calls.
-fun IngredientEntity.toPartialDomain(): Ingredient {
-    // This is a "partial" mapping. We temporarily create placeholder objects
-    // for the related items. The repository will fill these in.
-    return Ingredient(
-        id = id,
-        customDisplayName = customDisplayName,
-        quantity = quantity,
-        standardIngredient = StandardIngredient(id = standardIngredientId, name = ""), // Placeholder
-        measureUnit = MeasureUnit(id = measureUnitId, name = "", abbreviation = null, measurementType = MeasurementType.PIECE, conversionFactorToSystemBase = 1.0, isSystemUnit = false) // Placeholder
     )
 }
 
@@ -50,13 +35,18 @@ fun MeasureUnitEntity.toDomain(): MeasureUnit {
         id = id,
         name = name,
         abbreviation = abbreviation,
-        measurementType = MeasurementType.valueOf(measurementType),
+        measurementType = try {
+            MeasurementType.valueOf(measurementType)
+        } catch(e: IllegalArgumentException) {
+            MeasurementType.PIECE // Safe fallback
+        },
         conversionFactorToSystemBase = conversionFactorToSystemBase,
         isSystemUnit = isSystemUnit
     )
 }
 
-// --- Mappers from Domain to Database ---
+// --- Mappers from Domain Model to Database Entity ---
+// These are used when saving data to the database.
 
 fun RecipeHeader.toEntity(): RecipeHeaderEntity {
     return RecipeHeaderEntity(
@@ -69,7 +59,18 @@ fun RecipeHeader.toEntity(): RecipeHeaderEntity {
     )
 }
 
-// When saving, we need to convert the domain objects back to flat entities.
+fun RecipeVersion.toEntity(): RecipeVersionEntity {
+    // This mapper no longer handles the lists, as they are separate entities.
+    return RecipeVersionEntity(
+        id = id,
+        recipeHeaderId = recipeHeaderId,
+        versionName = versionName,
+        versionCommentary = versionCommentary,
+        overridePrepTimeMinutes = overridePrepTimeMinutes,
+        createdAt = createdAt
+    )
+}
+
 fun Ingredient.toEntity(recipeVersionId: String, order: Int): IngredientEntity {
     return IngredientEntity(
         id = id,
@@ -89,5 +90,14 @@ fun InstructionStep.toEntity(recipeVersionId: String, order: Int): InstructionSt
         description = description,
         timerDurationSeconds = timerInfo?.durationSeconds,
         itemOrder = order
+    )
+}
+
+// --- NEWLY ADDED MAPPERS ---
+fun Category.toEntity(): CategoryEntity = CategoryEntity(id, name)
+fun StandardIngredient.toEntity(): StandardIngredientEntity = StandardIngredientEntity(id, name, density)
+fun MeasureUnit.toEntity(): MeasureUnitEntity {
+    return MeasureUnitEntity(
+        id, name, abbreviation, measurementType.name, conversionFactorToSystemBase, isSystemUnit
     )
 }

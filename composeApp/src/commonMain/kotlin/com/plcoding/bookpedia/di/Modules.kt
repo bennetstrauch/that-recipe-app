@@ -6,6 +6,7 @@ import com.plcoding.bookpedia.recipe.data.database.RecipeDatabase
 import com.plcoding.bookpedia.recipe.data.repository.DefaultRecipeRepository
 import com.plcoding.bookpedia.recipe.domain.RecipeRepository
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailViewModel
+import com.plcoding.bookpedia.recipe.presentation.recipe_edit.RecipeEditViewModel
 import com.plcoding.bookpedia.recipe.presentation.recipe_list.RecipeListViewModel
 
 import org.koin.core.module.Module
@@ -21,6 +22,7 @@ val sharedModule = module {
 
     viewModelOf(::RecipeListViewModel)
     viewModelOf(::RecipeDetailViewModel)
+    viewModelOf(::RecipeEditViewModel)
 
 //    single {
 //        get<DatabaseFactory>().create()

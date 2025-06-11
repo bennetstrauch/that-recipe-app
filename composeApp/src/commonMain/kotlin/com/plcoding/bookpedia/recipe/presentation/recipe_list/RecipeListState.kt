@@ -4,7 +4,7 @@ import com.plcoding.bookpedia.core.presentation.UiText
 import com.plcoding.bookpedia.recipe.domain.RecipeHeader
 
 data class RecipeListState (
-    val searchQuery: String = "nothing",
+    val searchQuery: String = "",
     val searchResults: List<RecipeHeader> = emptyList(),
     val favoriteRecipes: List<RecipeHeader> = emptyList(),
     val selectedTabIndex: Int = 0,

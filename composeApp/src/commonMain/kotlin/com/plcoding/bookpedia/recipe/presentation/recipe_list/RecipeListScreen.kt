@@ -82,7 +82,7 @@ private fun RecipeListScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(16.dp)
+                    .padding(10.dp)
             )
         }
     ) { paddingValues ->
@@ -105,6 +105,8 @@ private fun RecipeListScreen(
                     text = { Text("Favorites") }
                 )
             }
+            Spacer(modifier = Modifier.height(12.dp))
+
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
