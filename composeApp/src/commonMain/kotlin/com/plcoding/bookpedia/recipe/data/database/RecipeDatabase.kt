@@ -5,19 +5,19 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
-/**
- * The main database class for the application.
- *
- * This abstract class extends RoomDatabase and serves as the main access point
- * to the persisted data.
- *
- * @property entities Lists all the data entity classes that are part of this database.
- * Room will create tables for each of these classes.
- * @property version The version of the database. This must be incremented whenever
- * the schema changes, along with providing a migration strategy.
- * @property typeConverters Links the custom TypeConverter class so Room knows how to
- * handle the MeasurementType enum.
- */
+///**
+// * The main database class for the application.
+// *
+// * This abstract class extends RoomDatabase and serves as the main access point
+// * to the persisted data.
+// *
+// * @property entities Lists all the data entity classes that are part of this database.
+// * Room will create tables for each of these classes.
+// * @property version The version of the database. This must be incremented whenever
+// * the schema changes, along with providing a migration strategy.
+// * @property typeConverters Links the custom TypeConverter class so Room knows how to
+// * handle the MeasurementType enum.
+// */
 @Database(
     entities = [
         // This list must include ALL entity classes for the database.

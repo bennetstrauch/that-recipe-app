@@ -162,33 +162,3 @@ private fun RecipeListScreen(
 }
 
 
-// --- PREVIEW FUNCTION (CORRECTED) ---
-
-@Composable
-@Preview
-private fun RecipeListScreenPreview() {
-    // Create dummy data that matches the rich domain models
-    val dummyCategory = Category(id = "cat1", name = "Desserts")
-    val previewRecipes = (1..10).map{
-        RecipeHeader(
-            id = it.toString(),
-            title = "Preview Recipe $it",
-            category = dummyCategory, // Pass the full Category object
-            imageUrl = null,
-            defaultPrepTimeMinutes = it * 5,
-            isFavorite = it % 3 == 0
-        )
-    }
-
-    MaterialTheme {
-        Surface {
-            RecipeListScreen(
-                state = RecipeListState(
-                    searchResults = previewRecipes,
-                    favoriteRecipes = previewRecipes.filter { it.isFavorite }
-                ),
-                onAction = {}
-            )
-        }
-    }
-}

@@ -1,3 +1,5 @@
+// In androidMain/com/plcoding/bookpedia/recipe/data/database/DatabaseFactory.kt
+
 package com.plcoding.bookpedia.recipe.data.database
 
 import android.content.Context
@@ -9,29 +11,35 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
-actual class DatabaseFactory(
-    private val context: Context
-) {
-    actual fun create(): RoomDatabase.Builder<RecipeDatabase> {
-        val appContext = context.applicationContext
+// ##### take care of other implementations, make it claner
+actual class DatabaseFactory(private val context: Context) {
 
-        return Room.databaseBuilder<RecipeDatabase>(
-            context = appContext,
-            // Best practice for Android is to provide just the filename.
-            // Room handles creating the file in the correct location.
-            name = RecipeDatabase.DB_NAME
+    @Volatile
+    private var instance: RecipeDatabase? = null
+
+    actual fun getDatabase(): RecipeDatabase {
+        return instance ?: synchronized(this) {
+            instance ?: buildDatabase().also { instance = it }
+        }
+    }
+
+    private fun buildDatabase(): RecipeDatabase {
+        val appContext = context.applicationContext
+        return Room.databaseBuilder(
+            appContext,
+            RecipeDatabase::class.java,
+            RecipeDatabase.DB_NAME
         )
+            // DO NOT call .setDriver() here. Let Room use Android's default.
             .addCallback(
                 object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
                         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
                         scope.launch {
-                            // Create a temporary instance of the DB for seeding
-                            val tempDb = getDatabase(appContext)
+                            // Safely get the singleton instance to perform seeding
+                            val dao = getDatabase().recipeDao
 
-                            // Use the DAO from the temporary instance to insert data
-                            val dao = tempDb.recipeDao()
                             dao.upsertCategories(InitialData.categories)
                             dao.upsertMeasureUnits(InitialData.measureUnits)
                             dao.upsertStandardIngredients(InitialData.standardIngredients)
@@ -47,21 +55,13 @@ actual class DatabaseFactory(
                             dao.upsertRecipeVersion(InitialData.chickenCurryVersion)
                             dao.upsertIngredients(InitialData.chickenCurryIngredients)
                             dao.upsertInstructionSteps(InitialData.chickenCurryDirections)
-
-                            // It's good practice to close the temporary instance
-                            tempDb.close()
                         }
+
+
+
                     }
                 }
             )
+            .build()
     }
-}
-
-// This helper function now correctly receives the context it needs.
-private fun getDatabase(context: Context): RecipeDatabase {
-    return Room.databaseBuilder(
-        context, // No need for applicationContext again, it's already done
-        RecipeDatabase::class.java,
-        RecipeDatabase.DB_NAME
-    ).build()
 }

@@ -22,10 +22,11 @@ val sharedModule = module {
     viewModelOf(::RecipeListViewModel)
     viewModelOf(::RecipeDetailViewModel)
 
-    single {
-        get<DatabaseFactory>().create()
-            .setDriver(BundledSQLiteDriver())
-            .build()
-    }
+//    single {
+//        get<DatabaseFactory>().create()
+//            .setDriver(BundledSQLiteDriver())
+//            .build()
+//    }
+    single { get<DatabaseFactory>().getDatabase() }
     single { get<RecipeDatabase>().recipeDao }
 }
