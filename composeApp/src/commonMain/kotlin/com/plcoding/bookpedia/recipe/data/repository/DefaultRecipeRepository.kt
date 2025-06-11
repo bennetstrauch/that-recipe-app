@@ -3,28 +3,21 @@ package com.plcoding.bookpedia.recipe.data.repository
 import com.plcoding.bookpedia.core.domain.DataError
 import com.plcoding.bookpedia.core.domain.EmptyResult
 import com.plcoding.bookpedia.core.domain.Result
-import com.plcoding.bookpedia.recipe.data.dummyRecipeHeaders
-import com.plcoding.bookpedia.recipe.data.dummyRecipeVersions
-import com.plcoding.bookpedia.recipe.domain.RecipeHeader
-import com.plcoding.bookpedia.recipe.domain.RecipeRepository
-import com.plcoding.bookpedia.recipe.domain.RecipeVersion
-import kotlinx.coroutines.delay
+import com.plcoding.bookpedia.recipe.data.database.RecipeDao
+import com.plcoding.bookpedia.recipe.data.toDomain
+import com.plcoding.bookpedia.recipe.domain.*
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
 
-class DefaultRecipeRepository : RecipeRepository {
-
-    // In-memory storage to simulate a database
-    private val _recipeHeaders = MutableStateFlow(dummyRecipeHeaders)
-    private val _recipeVersions = MutableStateFlow(dummyRecipeVersions)
+// # errorhandling properly
+class DefaultRecipeRepository(
+    private val dao: RecipeDao
+) : RecipeRepository {
 
     override suspend fun getAllRecipeHeaders(): Result<List<RecipeHeader>, DataError.Local> {
         return try {
-            delay(500L) // Simulate network/DB delay
-            Result.Success(_recipeHeaders.value)
+            val headersWithCategory = dao.getRecipeHeadersWithCategory()
+            Result.Success(headersWithCategory.map { it.toDomain() })
         } catch (e: Exception) {
             e.printStackTrace()
             Result.Error(DataError.Local.UNKNOWN)
@@ -33,70 +26,116 @@ class DefaultRecipeRepository : RecipeRepository {
 
     override suspend fun searchRecipes(query: String): Result<List<RecipeHeader>, DataError> {
         return try {
-            delay(300L) // Simulate search delay
-            val results = if (query.isBlank()) {
-                _recipeHeaders.value
-            } else {
-                _recipeHeaders.value.filter {
-                    it.title.contains(query, ignoreCase = true)
-                }
+            // In a real app, this would be a DAO query with a LIKE clause.
+            // For now, we filter the full list.
+            val allHeadersResult = getAllRecipeHeaders()
+            if (allHeadersResult is Result.Error) return allHeadersResult
+
+            val filtered = (allHeadersResult as Result.Success).data.filter {
+                it.title.contains(query, ignoreCase = true)
             }
-            Result.Success(results)
+            Result.Success(filtered)
         } catch (e: Exception) {
             e.printStackTrace()
-            Result.Error(DataError.Local.UNKNOWN) // Assuming local search for dummy repo
+            Result.Error(DataError.Local.UNKNOWN)
         }
     }
 
     override fun getFavoriteRecipeHeaders(): Flow<List<RecipeHeader>> {
-        // This function returns a Flow and was not changed in the interface.
-        // The implementation remains the same.
-        return _recipeHeaders.asStateFlow().map { headers ->
-            headers.filter { it.isFavorite }
-        }
+        return dao.getFavoriteRecipeHeadersWithCategory()
+            .map { list -> list.map { it.toDomain() } }
     }
 
     override suspend fun getRecipeHeaderById(id: String): Result<RecipeHeader?, DataError.Local> {
         return try {
-            val header = _recipeHeaders.value.find { it.id == id }
-            Result.Success(header)
+            val headerWithCategory = dao.getRecipeHeaderWithCategoryById(id)
+            Result.Success(headerWithCategory?.toDomain())
         } catch (e: Exception) {
             e.printStackTrace()
             Result.Error(DataError.Local.UNKNOWN)
         }
     }
 
+//    ##refactor
     override suspend fun getVersionsForRecipe(headerId: String): Result<List<RecipeVersion>, DataError.Local> {
         return try {
-            delay(200L) // Simulate delay
-            val versions = _recipeVersions.value.filter { it.recipeHeaderId == headerId }
-                .sortedByDescending { it.createdAt }
-            Result.Success(versions)
+            // 1. Fetch all versions and their related flat entities
+            val versionsWithDetails = dao.getRecipeVersionsWithDetails(headerId)
+            if (versionsWithDetails.isEmpty()) {
+                return Result.Success(emptyList())
+            }
+
+            // 2. Collect all unique IDs needed for the rich domain objects
+            val allIngredientEntities = versionsWithDetails.flatMap { it.ingredients }
+            val standardIngredientIds = allIngredientEntities.map { it.standardIngredientId }.distinct()
+            val measureUnitIds = allIngredientEntities.map { it.measureUnitId }.distinct()
+
+            // 3. Fetch all related domain objects in efficient batch queries
+            val standardIngredientsMap = dao.getStandardIngredientsByIds(standardIngredientIds)
+                .associateBy { it.id }
+                .mapValues { (_, entity) -> entity.toDomain() }
+            val measureUnitsMap = dao.getMeasureUnitsByIds(measureUnitIds)
+                .associateBy { it.id }
+                .mapValues { (_, entity) -> entity.toDomain() }
+
+            // 4. Assemble the final rich domain objects with explicit steps
+            val domainVersions = mutableListOf<RecipeVersion>()
+            for (versionWithDetails in versionsWithDetails) {
+                // Map ingredients for this specific version
+                val mappedIngredients = versionWithDetails.ingredients.mapNotNull { ingredientEntity ->
+                    val standardIngredient = standardIngredientsMap[ingredientEntity.standardIngredientId]
+                    val measureUnit = measureUnitsMap[ingredientEntity.measureUnitId]
+
+                    if (standardIngredient != null && measureUnit != null) {
+                        Ingredient(
+                            id = ingredientEntity.id,
+                            customDisplayName = ingredientEntity.customDisplayName,
+                            quantity = ingredientEntity.quantity,
+                            standardIngredient = standardIngredient,
+                            measureUnit = measureUnit
+                        )
+                    } else {
+                        null // Skip ingredient if its dependencies are missing
+                    }
+                }.sortedBy { it.id } // Restore order if needed
+
+                // Map the instruction steps for this version
+                val mappedDirections = versionWithDetails.directions
+                    .map { it.toDomain() }
+                    .sortedBy { it.id } // Restore order if needed
+
+                // Construct the final domain object directly, instead of using a mapper
+                val domainVersion = RecipeVersion(
+                    id = versionWithDetails.version.id,
+                    recipeHeaderId = versionWithDetails.version.recipeHeaderId,
+                    versionName = versionWithDetails.version.versionName,
+                    versionCommentary = versionWithDetails.version.versionCommentary,
+                    ingredients = mappedIngredients,
+                    directions = mappedDirections,
+                    overridePrepTimeMinutes = versionWithDetails.version.overridePrepTimeMinutes,
+                    createdAt = versionWithDetails.version.createdAt
+                )
+                domainVersions.add(domainVersion)
+            }
+
+            Result.Success(domainVersions)
         } catch (e: Exception) {
             e.printStackTrace()
             Result.Error(DataError.Local.UNKNOWN)
         }
     }
 
+
     override fun isRecipeFavorite(headerId: String): Flow<Boolean> {
-        // This function returns a Flow and was not changed in the interface.
-        return _recipeHeaders.asStateFlow().map { headers ->
-            headers.find { it.id == headerId }?.isFavorite ?: false
+        return getFavoriteRecipeHeaders().map { favorites ->
+            favorites.any { it.id == headerId }
         }
     }
 
     override suspend fun markAsFavorite(headerId: String): EmptyResult<DataError.Local> {
         return try {
-            _recipeHeaders.update { currentHeaders ->
-                currentHeaders.map { header ->
-                    if (header.id == headerId) {
-                        header.copy(isFavorite = true)
-                    } else {
-                        header
-                    }
-                }
-            }
-            Result.Success(Unit) // Return Success with Unit for EmptyResult
+            dao.markAsFavorite(headerId)
+            Result.Success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
             Result.Error(DataError.Local.UNKNOWN)
@@ -105,16 +144,8 @@ class DefaultRecipeRepository : RecipeRepository {
 
     override suspend fun removeFromFavorites(headerId: String): EmptyResult<DataError.Local> {
         return try {
-            _recipeHeaders.update { currentHeaders ->
-                currentHeaders.map { header ->
-                    if (header.id == headerId) {
-                        header.copy(isFavorite = false)
-                    } else {
-                        header
-                    }
-                }
-            }
-            Result.Success(Unit) // Return Success with Unit for EmptyResult
+            dao.removeFromFavorites(headerId)
+            Result.Success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
             Result.Error(DataError.Local.UNKNOWN)

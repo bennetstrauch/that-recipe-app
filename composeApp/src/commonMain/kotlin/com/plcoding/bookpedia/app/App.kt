@@ -1,6 +1,6 @@
 package com.plcoding.bookpedia.app
 
-import RecipeDetailScreenRoot
+
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.material3.MaterialTheme
@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailScreenRoot
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailViewModel
 import com.plcoding.bookpedia.recipe.presentation.recipe_list.RecipeListScreenRoot
 import com.plcoding.bookpedia.recipe.presentation.recipe_list.RecipeListViewModel

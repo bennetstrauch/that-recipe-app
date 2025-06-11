@@ -1,11 +1,12 @@
+package com.plcoding.bookpedia.recipe.presentation.recipe_detail
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,9 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.plcoding.bookpedia.recipe.domain.InstructionStep
 import com.plcoding.bookpedia.recipe.domain.RecipeVersion
-import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailAction
-import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailState
-import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailViewModel
 
 // Stateful Root Composable
 @Composable
@@ -76,7 +74,8 @@ private fun RecipeDetailScreen(
             }
         } else if (state.recipeHeader == null || state.selectedVersion == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Recipe not found.")
+                // Display error message from state if it exists
+                Text(state.errorMessage?.asString() ?: "Recipe not found.")
             }
         } else {
             LazyColumn(
@@ -86,9 +85,17 @@ private fun RecipeDetailScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Picture Section (omitted for brevity, can be added here)
+                // --- Picture Section can be added here ---
+                // item {
+                //     AsyncImage(
+                //         model = state.recipeHeader.imageUrl,
+                //         contentDescription = state.recipeHeader.title,
+                //         modifier = Modifier.fillMaxWidth().height(200.dp),
+                //         contentScale = ContentScale.Crop
+                //     )
+                // }
 
-                // Ingredients Section
+                // --- Ingredients Section ---
                 item {
                     Text("Ingredients", style = MaterialTheme.typography.titleLarge)
                 }
@@ -98,15 +105,18 @@ private fun RecipeDetailScreen(
                             checked = ingredient.id in state.checkedIngredientIds,
                             onCheckedChange = { onAction(RecipeDetailAction.OnToggleIngredientCheck(ingredient.id)) }
                         )
+                        // --- THIS IS THE CORRECTED PART ---
+                        // Use the rich domain model properties to display the ingredient text
                         Text(
-                            text = "${ingredient.quantity} ${ingredient.measureUnitId} ${ingredient.name}", // Note: measureUnitId should be resolved to a name
+                            text = "${ingredient.quantity} ${ingredient.measureUnit.abbreviation ?: ingredient.measureUnit.name} ${ingredient.customDisplayName}",
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
 
-                // Directions Section
+                // --- Directions Section ---
                 item {
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text("Directions", style = MaterialTheme.typography.titleLarge)
                 }
                 items(state.selectedVersion.directions) { step ->
@@ -118,11 +128,14 @@ private fun RecipeDetailScreen(
                         onAction = onAction
                     )
                 }
-                // Version Commentary Section
+                // --- Version Commentary Section ---
                 state.selectedVersion.versionCommentary?.let { commentary ->
-                    item {
-                        Text("Notes on this version:", style = MaterialTheme.typography.titleMedium)
-                        Text(commentary, style = MaterialTheme.typography.bodyMedium)
+                    if(commentary.isNotBlank()) {
+                        item {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Notes on this version:", style = MaterialTheme.typography.titleMedium)
+                            Text(commentary, style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
             }
@@ -161,7 +174,7 @@ private fun DirectionStepItem(
             // Timer Icon Button
             IconButton(onClick = { onAction(RecipeDetailAction.OnTimerClick(step.id)) }) {
                 Icon(
-                    imageVector = Icons.Default.Timer,
+                    imageVector = Icons.Default.Schedule, // Corrected icon
                     contentDescription = "Start/Stop Timer",
                     tint = if (isRunning) MaterialTheme.colorScheme.primary else LocalContentColor.current
                 )
@@ -202,11 +215,8 @@ private fun formatDuration(totalSeconds: Long): String {
     val minutes = (totalSeconds % 3600) / 60
     val seconds = totalSeconds % 60
     return if (hours > 0) {
-        // Format with hours
-        // .toString().padStart(2, '0') ensures two digits, e.g., "05" instead of "5"
         "$hours:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
     } else {
-        // Format without hours
         "${minutes}:${seconds.toString().padStart(2, '0')}"
     }
 }

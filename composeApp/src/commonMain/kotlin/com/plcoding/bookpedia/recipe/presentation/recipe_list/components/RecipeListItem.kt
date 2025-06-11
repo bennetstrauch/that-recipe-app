@@ -147,7 +147,7 @@ fun RecipeListItem(
                 )
 //                # remove one of the texts:
                     Text(
-                        text = recipe.categoryId,
+                        text = recipe.category.name,
                         style = MaterialTheme.typography.bodyLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -157,7 +157,7 @@ fun RecipeListItem(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = recipe.categoryId + " | ",
+                            text = recipe.category.name + " | ",
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Icon(
