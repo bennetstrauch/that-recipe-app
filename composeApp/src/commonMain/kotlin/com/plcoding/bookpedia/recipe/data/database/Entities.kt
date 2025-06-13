@@ -22,27 +22,26 @@ data class StandardIngredientEntity(
     val density: Double?
 )
 
-//@Entity
-//data class RecipeHeaderEntity(
-//    // Foreign key definition moved inside the annotation for clarity
-//    @PrimaryKey val id: String,
-//    val title: String,
-//    val categoryId: String?,
-//    val imageUrl: String?,
-//    val defaultPrepTimeMinutes: Int?,
-//    val isFavorite: Boolean
-//)
+@Entity
+data class RecipeHeaderEntity(
+    // Foreign key definition moved inside the annotation for clarity
+    @PrimaryKey val id: String,
+    val title: String,
+    val categoryId: String?,
+    val imageUrl: String?,
+    val defaultPrepTimeMinutes: Int?,
+    val isFavorite: Boolean
+)
 
-//@Entity
-//data class RecipeVersionEntity(
-//    @PrimaryKey val id: String,
-//    val recipeHeaderId: String, // This will be a foreign key
-//    val versionName: String,
-//    val versionCommentary: String?,
-//    val overridePrepTimeMinutes: Int?,
-//    val createdAt: Long
-//)
-
+@Entity
+data class RecipeVersionEntity(
+    @PrimaryKey val id: String,
+    val recipeHeaderId: String, // This will be a foreign key
+    val versionName: String,
+    val versionCommentary: String?,
+    val overridePrepTimeMinutes: Int?,
+    val createdAt: Long
+)
 // --- NEW ENTITIES FOR INGREDIENTS AND DIRECTIONS ---
 
 @Entity(
@@ -103,7 +102,7 @@ data class MeasureUnitEntity(
 // These are NOT tables. They are used to receive the results of queries
 // that combine data from multiple tables.
 
-data class RecipeHeaderWithCategory(
+data class RecipeHeaderTransferEntity(
     @Embedded
     val header: RecipeHeaderEntity,
     @Relation(
@@ -113,7 +112,7 @@ data class RecipeHeaderWithCategory(
     val category: CategoryEntity?
 )
 
-data class RecipeVersionWithDetails(
+data class RecipeVersionTransferEntity(
     @Embedded
     val version: RecipeVersionEntity,
 

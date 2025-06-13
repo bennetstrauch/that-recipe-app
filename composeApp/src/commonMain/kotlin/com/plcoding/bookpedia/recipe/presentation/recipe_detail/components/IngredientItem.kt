@@ -30,7 +30,7 @@ fun IngredientItem(
         )
         Text(
 //            #measureUnit fetch
-            text = "${ingredient.quantity} ${ingredient.measureUnit.name} ${ingredient.customDisplayName}",
+            text = "${ingredient.quantity} ${ingredient.measureUnit.abbreviation} ${ingredient.customDisplayName}",
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = if (isChecked) Color.Gray else Color.Black,
                 fontWeight = if (isChecked) FontWeight.Normal else FontWeight.Bold

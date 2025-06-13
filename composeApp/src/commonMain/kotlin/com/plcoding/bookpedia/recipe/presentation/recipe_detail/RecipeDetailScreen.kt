@@ -8,20 +8,25 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
+import androidx.compose.material3.DividerDefaults.color
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.plcoding.bookpedia.recipe.domain.InstructionStep
 import com.plcoding.bookpedia.recipe.domain.RecipeVersion
+import com.plcoding.bookpedia.recipe.presentation.recipe_detail.components.IngredientItem
 
 // Stateful Root Composable
 @Composable
 fun RecipeDetailScreenRoot(
     viewModel: RecipeDetailViewModel,
     onBackClick: () -> Unit,
-    onEditClick: (recipeHeaderId: String) -> Unit
+    onEditClick: (recipeHeaderId: String, recipeVersionId: String) -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -30,7 +35,7 @@ fun RecipeDetailScreenRoot(
         onAction = { action ->
             when (action) {
                 is RecipeDetailAction.OnBackClick -> onBackClick()
-                is RecipeDetailAction.OnEditClick -> state.recipeHeader?.id?.let(onEditClick)
+                is RecipeDetailAction.OnEditClick -> onEditClick(state.recipeHeader!!.id, state.selectedVersion!!.id)
                 else -> viewModel.onAction(action)
             }
         }
@@ -100,18 +105,13 @@ private fun RecipeDetailScreen(
                     Text("Ingredients", style = MaterialTheme.typography.titleLarge)
                 }
                 items(state.selectedVersion.ingredients) { ingredient ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = ingredient.id in state.checkedIngredientIds,
-                            onCheckedChange = { onAction(RecipeDetailAction.OnToggleIngredientCheck(ingredient.id)) }
-                        )
-                        // --- THIS IS THE CORRECTED PART ---
-                        // Use the rich domain model properties to display the ingredient text
-                        Text(
-                            text = "${ingredient.quantity} ${ingredient.measureUnit.abbreviation ?: ingredient.measureUnit.name} ${ingredient.customDisplayName}",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    IngredientItem(
+                        ingredient = ingredient,
+                        isChecked = ingredient.id in state.checkedIngredientIds,
+                        onCheckedChange = {
+                            onAction(RecipeDetailAction.OnToggleIngredientCheck(ingredient.id))
+                        }
+                    )
                 }
 
                 // --- Directions Section ---
@@ -143,6 +143,7 @@ private fun RecipeDetailScreen(
     }
 }
 
+//factor out?#
 @Composable
 private fun DirectionStepItem(
     step: InstructionStep,
@@ -159,7 +160,13 @@ private fun DirectionStepItem(
             checked = isChecked,
             onCheckedChange = { onAction(RecipeDetailAction.OnToggleStepCheck(step.id)) }
         )
-        Text(text = step.description, modifier = Modifier.weight(1f))
+        Text(text = step.description,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium.copy(
+//                #need to copy style here?
+                color = if (isChecked) Color.Gray else Color.Black
+        )
+        )
 
         // Timer display and button
         if (step.timerInfo != null) {

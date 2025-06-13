@@ -3,6 +3,7 @@ package com.plcoding.bookpedia.recipe.presentation.recipeedit
 import com.plcoding.bookpedia.recipe.domain.Category
 import com.plcoding.bookpedia.recipe.domain.Ingredient
 import com.plcoding.bookpedia.recipe.domain.InstructionStep
+import com.plcoding.bookpedia.recipe.domain.StandardIngredient
 
 sealed interface RecipeEditAction {
     // Header Actions
@@ -18,6 +19,9 @@ sealed interface RecipeEditAction {
     data object OnAddNewIngredient : RecipeEditAction
     data class OnDeleteIngredient(val index: Int) : RecipeEditAction
     data class OnUpdateIngredient(val index: Int, val ingredient: Ingredient) : RecipeEditAction
+    data class OnSearchStandardIngredient(val query: String) : RecipeEditAction
+    data class OnSelectStandardIngredient(val index: Int, val standardIngredient: StandardIngredient): RecipeEditAction
+
 
     // Direction Actions
     data object OnAddNewDirection : RecipeEditAction

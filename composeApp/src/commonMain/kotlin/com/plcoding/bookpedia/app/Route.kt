@@ -12,4 +12,4 @@ data object RecipeList : Route
 data class RecipeDetail(val recipeHeaderId: String) : Route
 
  @Serializable
- data class RecipeEdit(val recipeHeaderId: String) : Route
+ data class RecipeEdit(val recipeHeaderId: String, val recipeVersionId: String) : Route

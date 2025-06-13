@@ -57,9 +57,8 @@ fun App() {
                     onBackClick = {
                         navController.navigateUp()
                     },
-                    onEditClick = { recipeHeaderId ->
-                        // TODO: Navigate to an edit screen later
-                         navController.navigate(RecipeEdit(recipeHeaderId))
+                    onEditClick = { recipeHeaderId, recipeVersionId ->
+                         navController.navigate(RecipeEdit(recipeHeaderId, recipeVersionId))
                     }
                 )
             }

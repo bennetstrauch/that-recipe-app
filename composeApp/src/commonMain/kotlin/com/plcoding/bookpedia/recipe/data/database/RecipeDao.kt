@@ -6,6 +6,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
+import com.plcoding.bookpedia.recipe.domain.MeasureUnit
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -47,6 +48,9 @@ interface RecipeDao {
     suspend fun upsertStandardIngredients(ingredients: List<StandardIngredientEntity>)
 
     @Upsert
+    suspend fun upsertStandardIngredient(ingredient: StandardIngredientEntity)
+
+    @Upsert
     suspend fun upsertRecipeHeader(header: RecipeHeaderEntity)
 
     @Upsert
@@ -62,19 +66,26 @@ interface RecipeDao {
     // --- Read Operations ---
     @Transaction
     @Query("SELECT * FROM RecipeHeaderEntity ORDER BY title ASC")
-    suspend fun getRecipeHeadersWithCategory(): List<RecipeHeaderWithCategory>
+    suspend fun getRecipeHeadersWithCategory(): List<RecipeHeaderTransferEntity>
 
     @Transaction
     @Query("SELECT * FROM RecipeHeaderEntity WHERE isFavorite = 1 ORDER BY title ASC")
-    fun getFavoriteRecipeHeadersWithCategory(): Flow<List<RecipeHeaderWithCategory>>
+    fun getFavoriteRecipeHeadersWithCategory(): Flow<List<RecipeHeaderTransferEntity>>
 
     @Transaction
     @Query("SELECT * FROM RecipeHeaderEntity WHERE id = :id")
-    suspend fun getRecipeHeaderWithCategoryById(id: String): RecipeHeaderWithCategory?
+    suspend fun getRecipeHeaderWithCategoryById(id: String): RecipeHeaderTransferEntity?
 
     @Transaction
     @Query("SELECT * FROM RecipeVersionEntity WHERE recipeHeaderId = :headerId ORDER BY createdAt DESC")
-    suspend fun getRecipeVersionsWithDetails(headerId: String): List<RecipeVersionWithDetails>
+    suspend fun getRecipeVersionsWithDetails(headerId: String): List<RecipeVersionTransferEntity>
+
+    @Transaction
+    @Query("SELECT * FROM MeasureUnitEntity")
+    suspend fun getAllMeasureUnits(): List<MeasureUnitEntity>
+
+    @Query("SELECT * FROM StandardIngredientEntity WHERE name LIKE '%' || :query || '%'")
+    suspend fun searchStandardIngredients(query: String): List<StandardIngredientEntity>
 
 
     // --- Efficient Batch Fetching for Mappers ---
@@ -93,4 +104,6 @@ interface RecipeDao {
 
     @Query("UPDATE RecipeHeaderEntity SET isFavorite = 0 WHERE id = :headerId")
     suspend fun removeFromFavorites(headerId: String)
+
+
 }

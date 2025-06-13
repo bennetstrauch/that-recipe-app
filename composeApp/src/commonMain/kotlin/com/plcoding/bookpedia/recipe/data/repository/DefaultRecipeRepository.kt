@@ -21,13 +21,18 @@ class DefaultRecipeRepository(
 
     override suspend fun createNewRecipe(header: RecipeHeader, version: RecipeVersion): Result<String, DataError> {
         return try {
+            // For a brand new recipe, generate all new IDs.
             val newHeaderId = Uuid.random().toString()
-            val newVersionId = Uuid.random().toString()
-
+            val newVersion = version.copy(
+                id = Uuid.random().toString(),
+                recipeHeaderId = newHeaderId,
+                // Also create new IDs for all child elements to ensure uniqueness.
+                ingredients = version.ingredients.map { it.copy(id = Uuid.random().toString()) },
+                directions = version.directions.map { it.copy(id = Uuid.random().toString()) }
+            )
             val finalHeader = header.copy(id = newHeaderId)
-            val finalVersion = version.copy(id = newVersionId, recipeHeaderId = newHeaderId)
 
-            saveRecipeInternal(finalHeader, finalVersion)
+            saveRecipeInternal(finalHeader, newVersion)
             Result.Success(newHeaderId)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -37,6 +42,8 @@ class DefaultRecipeRepository(
 
     override suspend fun saveRecipeChanges(header: RecipeHeader, version: RecipeVersion): EmptyResult<DataError.Local> {
         return try {
+            // This function saves changes to an existing header and an existing version.
+            // The IDs are preserved, so @Upsert will perform an UPDATE.
             saveRecipeInternal(header, version)
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -45,11 +52,22 @@ class DefaultRecipeRepository(
         }
     }
 
-    override suspend fun saveAsNewVersion(header: RecipeHeader, newVersion: RecipeVersion): EmptyResult<DataError.Local> {
+    override suspend fun saveAsNewVersion(header: RecipeHeader, newVersionData: RecipeVersion): EmptyResult<DataError.Local> {
         return try {
-            // --- FIXED --- Use named argument `id` for clarity and correctness
-            val finalVersion = newVersion.copy(id = Uuid.random().toString())
+            // --- THIS IS THE CORRECTED LOGIC ---
+            // 1. Create a truly new version object with a new unique ID.
+            // 2. Also create new unique IDs for all its ingredients and steps.
+            val finalVersion = newVersionData.copy(
+                id = Uuid.random().toString(),
+                // Ensure it's linked to the correct header
+                recipeHeaderId = header.id,
+                ingredients = newVersionData.ingredients.map { it.copy(id = Uuid.random().toString()) },
+                directions = newVersionData.directions.map { it.copy(id = Uuid.random().toString()) }
+            )
 
+            // Call the internal helper to save the (potentially updated) header
+            // and the brand new version. Because the version and its contents have new IDs,
+            // @Upsert will perform an INSERT for them, leaving the original version untouched.
             saveRecipeInternal(header, finalVersion)
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -58,17 +76,33 @@ class DefaultRecipeRepository(
         }
     }
 
+    override suspend fun insertStandardIngredient(ingredient: StandardIngredient) : EmptyResult<DataError.Local> {
+        return try {
+            dao.upsertStandardIngredient(ingredient.toEntity())
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.Error(DataError.Local.UNKNOWN)
+        }
+    }
+
+    /**
+     * Private helper to perform the actual database transaction.
+     * It saves the header, a version, and its related ingredients/steps.
+     */
     private suspend fun saveRecipeInternal(header: RecipeHeader, version: RecipeVersion) {
         val headerEntity = header.toEntity()
-        val versionWithCorrectHeaderId = version.copy(recipeHeaderId = header.id)
+        val versionEntity = version.toEntity() // This no longer holds the lists
+        println("ingredientspassed#: " + version.ingredients.toString())
+        val ingredientEntities = version.ingredients.mapIndexed { index, ingredient ->
+            ingredient.toEntity(recipeVersionId = version.id, order = index)
+        }
+        println("ingrediententities#: " + ingredientEntities.toString())
+        val stepEntities = version.directions.mapIndexed { index, step ->
+            step.toEntity(recipeVersionId = version.id, order = index)
+        }
 
-        val versionEntity = versionWithCorrectHeaderId.toEntity()
-        val ingredientEntities = versionWithCorrectHeaderId.ingredients.mapIndexed { index, ingredient ->
-            ingredient.toEntity(recipeVersionId = versionWithCorrectHeaderId.id, order = index)
-        }
-        val stepEntities = versionWithCorrectHeaderId.directions.mapIndexed { index, step ->
-            step.toEntity(recipeVersionId = versionWithCorrectHeaderId.id, order = index)
-        }
+        // This transactional DAO method will handle updating/inserting everything correctly.
         dao.saveFullVersion(headerEntity, versionEntity, ingredientEntities, stepEntities)
     }
 
@@ -174,6 +208,31 @@ override suspend fun getVersionsForRecipe(headerId: String): Result<List<RecipeV
         Result.Error(DataError.Local.UNKNOWN)
     }
 }
+
+    override suspend fun getAllMeasureUnits(): Result<List<MeasureUnit>, DataError.Local> {
+        return try {
+            val measureUnits = dao.getAllMeasureUnits().map{ it.toDomain() }
+            Result.Success(measureUnits)
+        }
+//        ## remove this boilerplate through wrapper
+        catch (e: Exception) {
+            e.printStackTrace()
+            Result.Error(DataError.Local.UNKNOWN)
+        }
+
+    }
+
+    override suspend fun searchStandardIngredients(query: String): Result<List<StandardIngredient>, DataError> {
+        return try {
+            val entities = dao.searchStandardIngredients(query)
+            Result.Success(entities.map { it.toDomain() })
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.Error(DataError.Local.UNKNOWN)
+        }
+    }
+
+
 
 
     override fun isRecipeFavorite(headerId: String): Flow<Boolean> {

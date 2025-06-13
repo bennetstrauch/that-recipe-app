@@ -7,7 +7,7 @@ import com.plcoding.bookpedia.recipe.domain.*
 
 // --- Mappers from Database Entity to Domain Model ---
 
-fun RecipeHeaderWithCategory.toDomain(): RecipeHeader {
+fun RecipeHeaderTransferEntity.toDomain(): RecipeHeader {
     return RecipeHeader(
         id = header.id,
         title = header.title,

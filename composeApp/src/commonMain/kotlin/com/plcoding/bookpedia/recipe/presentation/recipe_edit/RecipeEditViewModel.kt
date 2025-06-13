@@ -12,7 +12,11 @@ import com.plcoding.bookpedia.recipe.domain.*
 import cmp_bookpedia.composeapp.generated.resources.Res
 import cmp_bookpedia.composeapp.generated.resources.error_validation_fields_empty
 import com.plcoding.bookpedia.app.RecipeEdit
+import com.plcoding.bookpedia.core.domain.DataError
+import com.plcoding.bookpedia.core.domain.EmptyResult
 import com.plcoding.bookpedia.recipe.presentation.recipeedit.RecipeEditAction
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -30,15 +34,19 @@ class RecipeEditViewModel(
     private val _state = MutableStateFlow(RecipeEditState())
     val state = _state.asStateFlow()
 
+    private var standardIngredientSearchJob: Job? = null
+
     init {
         val route = savedStateHandle.toRoute<RecipeEdit>()
-        val recipeHeaderId = route.recipeHeaderId
+        val headerId = route.recipeHeaderId
+        val versionId = route.recipeVersionId
 
-        if (recipeHeaderId == null) {
+        if (headerId.isBlank()) {
             initializeNewRecipe()
         } else {
-            loadRecipeForEditing(recipeHeaderId)
+            loadRecipeForEditing(headerId, versionId)
         }
+        loadDropdownData()
     }
 
     fun onAction(action: RecipeEditAction) {
@@ -56,6 +64,8 @@ class RecipeEditViewModel(
             is RecipeEditAction.OnAddNewIngredient -> addIngredient()
             is RecipeEditAction.OnDeleteIngredient -> deleteIngredient(action.index)
             is RecipeEditAction.OnUpdateIngredient -> updateIngredient(action.index, action.ingredient)
+            is RecipeEditAction.OnSearchStandardIngredient -> searchStandardIngredients(action.query)
+            is RecipeEditAction.OnSelectStandardIngredient -> selectStandardIngredient(action.index, action.standardIngredient)
 
             // Directions
             is RecipeEditAction.OnAddNewDirection -> addDirection()
@@ -67,6 +77,18 @@ class RecipeEditViewModel(
             is RecipeEditAction.OnSaveAsNewVersionClick -> saveAsNewVersion()
 
             else -> Unit
+        }
+    }
+
+    private fun loadDropdownData() {
+        viewModelScope.launch {
+            // ## separate DAO for measureUnits
+            val unitsResult = recipeRepository.getAllMeasureUnits()
+//             val categoriesResult = recipeRepository.getAllCategories()
+
+            unitsResult.onSuccess { units ->
+                _state.update { it.copy(availableMeasureUnits = units) }
+            }
         }
     }
 
@@ -93,19 +115,30 @@ class RecipeEditViewModel(
         _state.update { it.copy(isLoading = false, recipeHeader = newHeader, selectedVersion = newVersion) }
     }
 
-    private fun loadRecipeForEditing(headerId: String) {
+    private fun loadRecipeForEditing(headerId: String, versionId: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
+
+            // First, get the header information.
             recipeRepository.getRecipeHeaderById(headerId)
                 .onSuccess { header ->
+                    // Then, get all available versions for this recipe.
                     recipeRepository.getVersionsForRecipe(headerId)
-                        .onSuccess { versions ->
+                        .onSuccess { allVersions ->
+                            // Find the specific version
+                            // If no ID was provided, default to the first (most recent) version.
+                            val versionToEdit = allVersions.find { it.id == versionId } ?: allVersions.firstOrNull()
+
                             _state.update {
                                 it.copy(
                                     isLoading = false,
                                     recipeHeader = header,
-                                    selectedVersion = versions.firstOrNull() // Default to editing the latest version
-                                )
+                                    // It's useful to keep all versions in state if you want to
+                                    // add a dropdown to switch versions even while editing.
+                                    allVersions = allVersions,
+                                    selectedVersion = versionToEdit,
+                                    isEditing = true,
+                                    )
                             }
                         }
                         .onError { error -> _state.update { it.copy(isLoading = false, error = error.toUiText()) } }
@@ -113,6 +146,8 @@ class RecipeEditViewModel(
                 .onError { error -> _state.update { it.copy(isLoading = false, error = error.toUiText()) } }
         }
     }
+
+    // --- INGREDIENT HELPER FUNCTIONS ---
 
     private fun addIngredient() {
         _state.value.selectedVersion?.let { version ->
@@ -148,6 +183,41 @@ class RecipeEditViewModel(
         }
     }
 
+    private fun searchStandardIngredients(query: String) {
+        standardIngredientSearchJob?.cancel()
+        standardIngredientSearchJob = viewModelScope.launch {
+            delay(200L) // Debounce to avoid searching on every keystroke
+            if (query.isNotBlank()) {
+                recipeRepository.searchStandardIngredients(query)
+                    .onSuccess { results ->
+                        _state.update { it.copy(standardIngredientSearchResults = results) }
+                    }
+            } else {
+                _state.update { it.copy(standardIngredientSearchResults = emptyList()) }
+            }
+        }
+    }
+
+    private fun selectStandardIngredient(ingredientIndex: Int, standardIngredient: StandardIngredient) {
+        _state.value.selectedVersion?.let { version ->
+            val updatedIngredients = version.ingredients.toMutableList().apply {
+                val oldIngredient = this[ingredientIndex]
+                this[ingredientIndex] = oldIngredient.copy(
+                    standardIngredient = standardIngredient,
+                    customDisplayName = standardIngredient.name
+                )
+            }
+            _state.update {
+                it.copy(
+                    selectedVersion = version.copy(ingredients = updatedIngredients),
+                    standardIngredientSearchResults = emptyList() // Clear/hide search results after selection
+                )
+            }
+        }
+    }
+
+    // --- DIRECTION HELPER FUNCTIONS ---
+
     private fun addDirection() {
         _state.value.selectedVersion?.let { version ->
             val newDirection = InstructionStep(
@@ -179,6 +249,8 @@ class RecipeEditViewModel(
         }
     }
 
+//    --- SAVE & VALIDATION ---
+
     private fun validateInput(): Boolean {
         val header = state.value.recipeHeader
         val version = state.value.selectedVersion
@@ -193,15 +265,31 @@ class RecipeEditViewModel(
     }
 
     private fun saveChanges() {
+        // Calls the new helper with the correct repository function
+        performSave(recipeRepository::saveRecipeChanges)
+    }
+
+    private fun saveAsNewVersion() {
+        // Calls the new helper with the correct repository function
+        performSave(recipeRepository::saveAsNewVersion)
+    }
+
+    private fun performSave(
+        saveAction: suspend (RecipeHeader, RecipeVersion) -> EmptyResult<DataError>
+    ) {
         if (!validateInput()) return
 
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true) }
-            val header = state.value.recipeHeader!!
-            val version = state.value.selectedVersion!!
+            var header = state.value.recipeHeader!!
+            var version = state.value.selectedVersion!!
 
-            val result = recipeRepository.saveRecipeChanges(header, version)
-            result.onSuccess {
+//            #should i not check if it is necessary to update ? { wrap the next to line in this check?
+            val updatedIngredients = createNewStandardIngredientsIfNecessary(version.ingredients)
+            println("updatedIngredients: ${updatedIngredients.toString()}. #")
+            version = version.copy(ingredients = updatedIngredients)
+
+            saveAction(header, version).onSuccess {
                 _state.update { it.copy(isSaving = false, isFinished = true) }
             }.onError { error ->
                 _state.update { it.copy(isSaving = false, error = error.toUiText()) }
@@ -209,19 +297,17 @@ class RecipeEditViewModel(
         }
     }
 
-    private fun saveAsNewVersion() {
-        if (!validateInput()) return
 
-        viewModelScope.launch {
-            _state.update { it.copy(isSaving = true) }
-            val header = state.value.recipeHeader!!
-            val version = state.value.selectedVersion!!
 
-            val result = recipeRepository.saveAsNewVersion(header, version)
-            result.onSuccess {
-                _state.update { it.copy(isSaving = false, isFinished = true) }
-            }.onError { error ->
-                _state.update { it.copy(isSaving = false, error = error.toUiText()) }
+    private suspend fun createNewStandardIngredientsIfNecessary(ingredients: List<Ingredient>): List<Ingredient> {
+        return ingredients.map { ingredient ->
+            if (ingredient.standardIngredient.id == "new_std_id") {
+                val newStandard = StandardIngredient(id = Uuid.random().toString(), name = ingredient.customDisplayName, density = null)
+                println("newStandard: ${newStandard.toString()}")
+                recipeRepository.insertStandardIngredient(newStandard)
+                ingredient.copy(standardIngredient = newStandard)
+            } else {
+                ingredient
             }
         }
     }
