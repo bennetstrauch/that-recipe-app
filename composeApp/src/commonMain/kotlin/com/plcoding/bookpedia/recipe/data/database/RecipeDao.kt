@@ -66,7 +66,11 @@ interface RecipeDao {
     // --- Read Operations ---
     @Transaction
     @Query("SELECT * FROM RecipeHeaderEntity ORDER BY title ASC")
-    suspend fun getRecipeHeadersWithCategory(): List<RecipeHeaderTransferEntity>
+    fun getRecipeHeadersWithCategory(): Flow<List<RecipeHeaderTransferEntity>>
+
+    @Transaction
+    @Query("SELECT * FROM RecipeHeaderEntity WHERE title LIKE '%' || :query || '%' ORDER BY title ASC")
+    fun searchRecipeHeadersWithCategory(query: String): Flow<List<RecipeHeaderTransferEntity>> // New search Flow
 
     @Transaction
     @Query("SELECT * FROM RecipeHeaderEntity WHERE isFavorite = 1 ORDER BY title ASC")
@@ -74,11 +78,11 @@ interface RecipeDao {
 
     @Transaction
     @Query("SELECT * FROM RecipeHeaderEntity WHERE id = :id")
-    suspend fun getRecipeHeaderWithCategoryById(id: String): RecipeHeaderTransferEntity?
+    fun getRecipeHeaderWithCategoryById(id: String): Flow<RecipeHeaderTransferEntity?>
 
     @Transaction
     @Query("SELECT * FROM RecipeVersionEntity WHERE recipeHeaderId = :headerId ORDER BY createdAt DESC")
-    suspend fun getRecipeVersionsWithDetails(headerId: String): List<RecipeVersionTransferEntity>
+    fun getRecipeVersionsWithDetails(headerId: String): Flow<List<RecipeVersionTransferEntity>>
 
     @Transaction
     @Query("SELECT * FROM MeasureUnitEntity")

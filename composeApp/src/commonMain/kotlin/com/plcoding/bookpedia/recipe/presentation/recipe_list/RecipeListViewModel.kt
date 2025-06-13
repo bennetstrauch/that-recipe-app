@@ -6,6 +6,7 @@ import com.plcoding.bookpedia.core.domain.onError
 import com.plcoding.bookpedia.core.domain.onSuccess
 import com.plcoding.bookpedia.core.presentation.toUiText
 import com.plcoding.bookpedia.recipe.domain.RecipeRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -52,48 +53,32 @@ class RecipeListViewModel(
             .launchIn(viewModelScope)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeSearchQuery() {
         state
             .map { it.searchQuery }
-            .distinctUntilChanged() // Only emit when the query text actually changes
-            .debounce(500L) // Wait for 500ms of inactivity before triggering a search
-            .onEach { query ->
-                loadRecipes(query)
+            .debounce(500L)
+            .distinctUntilChanged()
+            .onEach { _state.update { it.copy(isLoading = true) } }
+            .flatMapLatest { query -> // flatMapLatest is key: it cancels the old flow and starts a new one
+                if (query.isBlank()) {
+                    recipeRepository.getAllRecipeHeaders()
+                } else {
+                    recipeRepository.searchRecipes(query)
+                }
+            }
+            .onEach { result ->
+                result.onSuccess { recipes ->
+                    _state.update { it.copy(isLoading = false, searchResults = recipes) }
+                }.onError { error ->
+                    _state.update { it.copy(isLoading = false, errorMessage = error.toUiText()) }
+                }
             }
             .launchIn(viewModelScope)
     }
 
 
-    private fun loadRecipes(query: String) {
-        searchJob?.cancel() // Cancel any previous ongoing search
-        searchJob = viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, errorMessage = null) }
 
-            val result = if (query.isBlank()) {
-                recipeRepository.getAllRecipeHeaders()
-            } else {
-                recipeRepository.searchRecipes(query)
-            }
-
-            result
-                .onSuccess { recipes ->
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            searchResults = recipes
-                        )
-                    }
-                }
-                .onError { error ->
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = error.toUiText()
-                        )
-                    }
-                }
-        }
-    }
 
 
 }

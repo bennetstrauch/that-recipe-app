@@ -4,6 +4,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.plcoding.bookpedia.recipe.data.database.DatabaseFactory
 import com.plcoding.bookpedia.recipe.data.database.RecipeDatabase
 import com.plcoding.bookpedia.recipe.data.repository.DefaultRecipeRepository
+import com.plcoding.bookpedia.recipe.domain.GetRecipeDetailsUseCase
 import com.plcoding.bookpedia.recipe.domain.RecipeRepository
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailViewModel
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.RecipeEditViewModel
@@ -24,11 +25,10 @@ val sharedModule = module {
     viewModelOf(::RecipeDetailViewModel)
     viewModelOf(::RecipeEditViewModel)
 
-//    single {
-//        get<DatabaseFactory>().create()
-//            .setDriver(BundledSQLiteDriver())
-//            .build()
-//    }
+
     single { get<DatabaseFactory>().getDatabase() }
     single { get<RecipeDatabase>().recipeDao }
+
+    factory { GetRecipeDetailsUseCase(get()) }
+
 }

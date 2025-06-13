@@ -151,6 +151,11 @@ class RecipeEditViewModel(
 
     private fun addIngredient() {
         _state.value.selectedVersion?.let { version ->
+
+            val defaultUnit = state.value.availableMeasureUnits.find { it.name == "Piece" }
+                ?: state.value.availableMeasureUnits.firstOrNull()
+                // Fallback only if the DB is empty
+
             // Create a default new ingredient
             val newIngredient = Ingredient(
                 id = Uuid.random().toString(),

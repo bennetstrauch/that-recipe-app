@@ -3,6 +3,8 @@ package com.plcoding.bookpedia.recipe.presentation.recipe_detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
+import com.plcoding.bookpedia.app.RecipeDetail
 import com.plcoding.bookpedia.core.domain.onError
 import com.plcoding.bookpedia.core.domain.onSuccess
 import com.plcoding.bookpedia.core.presentation.toUiText
@@ -23,15 +25,15 @@ class RecipeDetailViewModel(
     private val _state = MutableStateFlow(RecipeDetailState())
     val state = _state.asStateFlow()
 
+    private val headerId: String
+
     init {
-        // Fetch the recipe header ID passed during navigation
-        val recipeHeaderId = savedStateHandle.get<String>("recipeHeaderId")
-        if (recipeHeaderId == null) {
-            // Handle error: No ID provided
-            _state.update { it.copy(isLoading = false) }
-        } else {
-            loadRecipeDetails(recipeHeaderId)
-        }
+        // Get the headerId once from the navigation arguments
+        val route = savedStateHandle.toRoute<RecipeDetail>()
+        headerId = route.recipeHeaderId
+
+        // Start observing the data from the database
+        observeRecipeDetails()
     }
 
     fun onAction(action: RecipeDetailAction) {
@@ -47,55 +49,51 @@ class RecipeDetailViewModel(
         }
     }
 
-    private fun loadRecipeDetails(headerId: String) {
+    private fun observeRecipeDetails() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 
-            // Step 1: Fetch the Recipe Header
-            recipeRepository.getRecipeHeaderById(headerId)
-                .onSuccess { header ->
-                    if (header == null) {
-                        // Handle case where header is not found
-                        _state.update { it.copy(isLoading = false, recipeHeader = null) }
-                        return@onSuccess
-                    }
+            // Create two flows: one for the header, one for all its versions
+            val headerFlow = recipeRepository.getRecipeHeaderById(headerId)
+            val versionsFlow = recipeRepository.getVersionsForRecipe(headerId)
 
-                    // Step 2: If header is found, fetch its versions
-                    recipeRepository.getVersionsForRecipe(headerId)
-                        .onSuccess { versions ->
-                            // Both header and versions were fetched successfully
-                            _state.update {
-                                it.copy(
-                                    isLoading = false,
-                                    recipeHeader = header,
-                                    allVersions = versions,
-                                    // Select the most recent version as default
-                                    selectedVersion = versions.firstOrNull()
-                                )
-                            }
-                        }
-                        .onError { error ->
-                            // Failed to fetch versions
-                            _state.update {
-                                it.copy(
-                                    isLoading = false,
-                                    recipeHeader = header, // Still show header info
-                                    errorMessage = error.toUiText()
-                                )
-                            }
-                        }
+            // Use `combine` to merge the latest emissions from both flows
+            combine(headerFlow, versionsFlow) { headerResult, versionsResult ->
+                // This block runs whenever either the header or the versions change in the DB
+
+                var finalState = _state.value
+
+                headerResult.onSuccess { header ->
+                    finalState = finalState.copy(recipeHeader = header)
+                }.onError { error ->
+                    finalState = finalState.copy(errorMessage = error.toUiText())
                 }
-                .onError { error ->
-                    // Failed to fetch the main recipe header
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = error.toUiText()
-                        )
-                    }
+
+                versionsResult.onSuccess { versions ->
+                    // If this is the first time loading, or the selected version was deleted,
+                    // select the most recent one. Otherwise, keep the current selection.
+                    val currentSelectedId = finalState.selectedVersion?.id
+                    val newSelectedVersion =
+                        versions.find { it.id == currentSelectedId } ?: versions.firstOrNull()
+
+                    finalState = finalState.copy(
+                        allVersions = versions,
+                        selectedVersion = newSelectedVersion
+                    )
+                }.onError { error ->
+                    finalState = finalState.copy(errorMessage = error.toUiText())
                 }
+
+                // Return the combined state, ensuring isLoading is turned off
+                finalState.copy(isLoading = false)
+
+            }.collect { combinedState ->
+                // Update the UI with the final combined state
+                _state.value = combinedState
+            }
         }
     }
+
 
     private fun selectVersion(versionId: String) {
         val newVersion = _state.value.allVersions.find { it.id == versionId }

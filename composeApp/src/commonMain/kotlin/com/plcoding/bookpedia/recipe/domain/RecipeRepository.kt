@@ -14,11 +14,11 @@ interface RecipeRepository {
 
 
     // --- Read Functions ---
-    suspend fun getAllRecipeHeaders(): Result<List<RecipeHeader>, DataError.Local>
-    suspend fun searchRecipes(query: String): Result<List<RecipeHeader>, DataError>
+    fun getAllRecipeHeaders(): Flow<Result<List<RecipeHeader>, DataError.Local>>
+    fun searchRecipes(query: String): Flow<Result<List<RecipeHeader>, DataError>>
     fun getFavoriteRecipeHeaders(): Flow<List<RecipeHeader>>
-    suspend fun getRecipeHeaderById(id: String): Result<RecipeHeader?, DataError.Local>
-    suspend fun getVersionsForRecipe(headerId: String): Result<List<RecipeVersion>, DataError.Local>
+    fun getRecipeHeaderById(id: String): Flow<Result<RecipeHeader?, DataError.Local>>
+    fun getVersionsForRecipe(headerId: String): Flow<Result<List<RecipeVersion>, DataError.Local>>
     suspend fun getAllMeasureUnits(): Result<List<MeasureUnit>, DataError.Local>
     suspend fun searchStandardIngredients(query: String): Result<List<StandardIngredient>, DataError>
 
