@@ -40,6 +40,11 @@ fun App() {
                         navController.navigate(
                             RecipeDetail(recipeHeaderId = recipeHeader.id)
                         )
+                    },
+                    onAddRecipeClick = {
+                        navController.navigate(
+                            RecipeEdit(recipeHeaderId = null, recipeVersionId = null)
+                        )
                     }
                 )
             }

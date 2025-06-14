@@ -43,7 +43,7 @@ class RecipeEditViewModel(
         val headerId = route.recipeHeaderId
         val versionId = route.recipeVersionId
 
-        if (headerId.isBlank()) {
+        if (headerId.isNullOrBlank()) {
             initializeNewRecipe()
         } else {
             observeRecipeForEditing(headerId, versionId)

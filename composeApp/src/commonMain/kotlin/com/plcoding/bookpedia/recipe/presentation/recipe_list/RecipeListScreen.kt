@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,17 +31,17 @@ import org.koin.compose.viewmodel.koinViewModel
 fun RecipeListScreenRoot(
     viewModel: RecipeListViewModel = koinViewModel(),
     onRecipeClick: (RecipeHeader) -> Unit,
+    onAddRecipeClick: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     RecipeListScreen(
         state = state,
         onAction = { action ->
-            // Pass all actions to the ViewModel, but handle navigation clicks here.
-            if (action is RecipeListAction.OnRecipeClick) {
-                onRecipeClick(action.recipe)
-            } else {
-                viewModel.onAction(action)
+            when (action) {
+                is RecipeListAction.OnRecipeClick -> onRecipeClick(action.recipe)
+                is RecipeListAction.OnAddRecipeClick -> onAddRecipeClick() // <-- HANDLE THE NEW ACTION
+                else -> viewModel.onAction(action)
             }
         }
     )
@@ -84,7 +86,23 @@ private fun RecipeListScreen(
                     .statusBarsPadding()
                     .padding(10.dp)
             )
-        }
+        },
+
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    onAction(RecipeListAction.OnAddRecipeClick)
+                },
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add new recipe"
+                )
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End
+
     ) { paddingValues ->
         Column(
             modifier = Modifier

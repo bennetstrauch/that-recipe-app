@@ -40,6 +40,9 @@ class RecipeListViewModel(
                 // This action is handled by the NavHost for navigation,
                 // but you could add logic here if needed.
             }
+            is RecipeListAction.OnAddRecipeClick -> {
+                // action handled by NavHost
+            }
         }
     }
 
