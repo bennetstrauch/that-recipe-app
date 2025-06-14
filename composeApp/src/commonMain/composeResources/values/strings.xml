@@ -6,9 +6,9 @@
 
     <string name="search_results">Search Results</string>
     <string name="favorites">Favorites</string>
-    <string name="no_search_results">Oops, there aren't any books for your search query.</string>
-    <string name="no_favorite_books">No favorite books yet.</string>
-    <string name="book_cover">Book cover</string>
+    <string name="no_search_results">Oops, there aren't any recipes for your search query.</string>
+    <string name="no_favorite_recipes">No favorite recipes yet.</string>
+    <string name="recipe_cover">Recipe cover</string>
     <string name="rating">Rating</string>
     <string name="pages">Pages</string>
     <string name="languages">Languages</string>
@@ -24,4 +24,5 @@
     <string name="error_too_many_requests">Your quota seems to be exceeded.</string>
     <string name="error_serialization">Couldn't parse data.</string>
     <string name="error_validation_fields_empty">Please make sure all required fields are filled out.</string>
+    <string name="error_no_recipe_found">No recipe found.</string>"
 </resources>

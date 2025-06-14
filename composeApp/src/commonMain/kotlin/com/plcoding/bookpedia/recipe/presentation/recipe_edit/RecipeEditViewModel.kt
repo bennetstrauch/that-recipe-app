@@ -10,6 +10,7 @@ import com.plcoding.bookpedia.core.presentation.UiText
 import com.plcoding.bookpedia.core.presentation.toUiText
 import com.plcoding.bookpedia.recipe.domain.*
 import cmp_bookpedia.composeapp.generated.resources.Res
+import cmp_bookpedia.composeapp.generated.resources.error_no_recipe_found
 import cmp_bookpedia.composeapp.generated.resources.error_validation_fields_empty
 import com.plcoding.bookpedia.app.RecipeEdit
 import com.plcoding.bookpedia.core.domain.DataError
@@ -28,6 +29,7 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class)
 class RecipeEditViewModel(
     private val recipeRepository: RecipeRepository,
+    private val getRecipeDetailsUseCase: GetRecipeDetailsUseCase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -44,7 +46,7 @@ class RecipeEditViewModel(
         if (headerId.isBlank()) {
             initializeNewRecipe()
         } else {
-            loadRecipeForEditing(headerId, versionId)
+            observeRecipeForEditing(headerId, versionId)
         }
         loadDropdownData()
     }
@@ -115,35 +117,40 @@ class RecipeEditViewModel(
         _state.update { it.copy(isLoading = false, recipeHeader = newHeader, selectedVersion = newVersion) }
     }
 
-    private fun loadRecipeForEditing(headerId: String, versionId: String) {
+    private fun observeRecipeForEditing(headerId: String, versionId: String?) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 
-            // First, get the header information.
-            recipeRepository.getRecipeHeaderById(headerId)
-                .onSuccess { header ->
-                    // Then, get all available versions for this recipe.
-                    recipeRepository.getVersionsForRecipe(headerId)
-                        .onSuccess { allVersions ->
-                            // Find the specific version
-                            // If no ID was provided, default to the first (most recent) version.
-                            val versionToEdit = allVersions.find { it.id == versionId } ?: allVersions.firstOrNull()
+            getRecipeDetailsUseCase(headerId, versionId)
+                .collect { result ->
+                    result
+                        .onSuccess { pair ->
+                            if (pair == null) {
+                                _state.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        error = UiText.StringResourceId(Res.string.error_no_recipe_found)
+                                    )
+                                }
+                                return@onSuccess
+                            }
 
+                            val (header, version) = pair
                             _state.update {
                                 it.copy(
                                     isLoading = false,
-                                    recipeHeader = header,
-                                    // It's useful to keep all versions in state if you want to
-                                    // add a dropdown to switch versions even while editing.
-                                    allVersions = allVersions,
-                                    selectedVersion = versionToEdit,
                                     isEditing = true,
-                                    )
+                                    recipeHeader = header,
+                                    selectedVersion = version
+                                )
                             }
                         }
-                        .onError { error -> _state.update { it.copy(isLoading = false, error = error.toUiText()) } }
+                        .onError { error ->
+                            _state.update {
+                                it.copy(isLoading = false, error = error.toUiText())
+                            }
+                        }
                 }
-                .onError { error -> _state.update { it.copy(isLoading = false, error = error.toUiText()) } }
         }
     }
 

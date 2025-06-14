@@ -49,6 +49,7 @@ class RecipeDetailViewModel(
         }
     }
 
+//    #unify?
     private fun observeRecipeDetails() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
