@@ -38,30 +38,22 @@ fun EditableDirectionItem(
             label = { Text("Step Description") },
             modifier = Modifier.weight(1f)
         )
-        // TODO: Add UI to edit the timerInfo (e.g., a small text field for seconds)
-        // For now, this just shows an icon if a timer exists.
-        if(step.timerInfo != null) {
-            Icon(
-                imageVector = Icons.Default.Schedule,
-                contentDescription = "Has Timer"
-            )
-        }
 
         // Timer Button
-//        TextButton(onClick = onEditTimerClick) {
-//            Icon(
-//                imageVector = Icons.Default.Schedule,
-//                contentDescription = "Edit Timer",
-//                tint = if (step.timerInfo != null) MaterialTheme.colorScheme.primary else LocalContentColor.current
-//            )
-//            // Display current time or "Edit"
-//            val timerDuration = step.timerInfo?.durationSeconds
-//            if (timerDuration != null) {
-//                val buttonText = formatDuration(timerDuration)
-//                Text(buttonText)
-//            }
-//
-//        }
+        TextButton(onClick = onEditTimerClick) {
+            Icon(
+                imageVector = Icons.Default.Schedule,
+                contentDescription = "Edit Timer",
+                tint = if (step.timerInfo != null) MaterialTheme.colorScheme.primary else LocalContentColor.current
+            )
+            // Display current time or "Edit"
+            val timerDuration = step.timerInfo?.durationSeconds
+            if (timerDuration != null) {
+                val buttonText = formatDuration(timerDuration)
+                Text(buttonText)
+            }
+
+        }
 
 //        #maybe move to left
         IconButton(onClick = onDelete) {

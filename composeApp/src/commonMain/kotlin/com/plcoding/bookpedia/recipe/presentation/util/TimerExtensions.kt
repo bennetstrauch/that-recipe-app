@@ -12,7 +12,7 @@ fun formatDuration(totalSeconds: Long): String {
     val seconds = totalSeconds % 60
 
     return if (hours > 0) {
-        "$hours h:${(minutes+1).toString().padStart(2, '0')}"
+        "$hours"+"h:${(minutes+1).toString().padStart(2, '0')}"
     } else if (minutes > 10) {
 //        ##+1
         "${minutes+1} min"
