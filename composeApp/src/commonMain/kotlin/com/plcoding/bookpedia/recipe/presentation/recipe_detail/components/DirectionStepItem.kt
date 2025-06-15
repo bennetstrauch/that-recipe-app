@@ -19,6 +19,7 @@ import com.plcoding.bookpedia.recipe.presentation.util.formatDuration
 fun DirectionStepItem(
     step: InstructionStep,
     isRunning: Boolean,
+    isPaused: Boolean,
     remainingSeconds: Long?,
     isChecked: Boolean,
     onAction: (RecipeDetailAction) -> Unit
@@ -40,7 +41,13 @@ fun DirectionStepItem(
         )
 
         if (step.timerInfo != null) {
-            TimerItem(isRunning=isRunning, remainingSeconds=remainingSeconds, staticText = "", onClick = { onAction(RecipeDetailAction.OnTimerClick(step.id)) } )
+            TimerItem(
+                isRunning=isRunning, remainingSeconds=remainingSeconds ?: 0, staticText = "",
+                isPaused = isPaused,
+                onClick = { onAction(RecipeDetailAction.OnTimerClick(step.id)) },
+                onPause = { onAction(RecipeDetailAction.OnPauseTimer(step.id)) },
+                onResume = { onAction(RecipeDetailAction.OnResumeTimer(step.id)) },
+            )
         }
     }
 }

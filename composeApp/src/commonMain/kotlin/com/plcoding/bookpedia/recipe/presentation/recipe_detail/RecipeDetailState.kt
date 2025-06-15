@@ -14,5 +14,6 @@ data class RecipeDetailState(
     val checkedStepIds: Set<String> = emptySet(),
     // Map of <InstructionStep.id, RemainingSeconds>
     val runningTimers: Map<String, Long> = emptyMap(),
+    val pausedTimers: Set<String> = emptySet(),
     val errorMessage: UiText? = null
 )

@@ -53,10 +53,12 @@ class RecipeDetailViewModel(
             is RecipeDetailAction.OnSelectVersion -> selectVersion(action.versionId)
             is RecipeDetailAction.OnToggleIngredientCheck -> toggleIngredient(action.ingredientId)
             is RecipeDetailAction.OnToggleStepCheck -> toggleStep(action.stepId)
-            is RecipeDetailAction.OnTimerClick -> handleTimer(action.stepId)
             is RecipeDetailAction.OnTogglePictureVisibility -> {
                 _state.update { it.copy(isPictureVisible = !it.isPictureVisible) }
             }
+            is RecipeDetailAction.OnTimerClick -> handleTimer(action.stepId)
+            is RecipeDetailAction.OnPauseTimer -> pauseTimer(action.stepId)
+            is RecipeDetailAction.OnResumeTimer -> resumeTimer(action.stepId)
             else -> Unit
         }
     }
@@ -169,6 +171,19 @@ class RecipeDetailViewModel(
     }
 
 
+    fun pauseTimer(stepId: String) {
+        timerManager.pauseTimer(stepId)
+        _state.update {
+            it.copy(pausedTimers = it.pausedTimers + stepId)
+        }
+    }
+
+    fun resumeTimer(stepId: String) {
+        timerManager.resumeTimer(stepId)
+        _state.update {
+            it.copy(pausedTimers = it.pausedTimers - stepId)
+        }
+    }
 
 
 //    #object difference??

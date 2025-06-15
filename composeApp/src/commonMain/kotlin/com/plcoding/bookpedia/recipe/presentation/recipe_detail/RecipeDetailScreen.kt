@@ -65,13 +65,27 @@ private fun RecipeDetailScreen(
                     }
                 },
                 actions = {
-                    TimerItem(
-                        isRunning = state.runningTimers.containsKey(prepTimerStepId),
-                        remainingSeconds = state.runningTimers[prepTimerStepId],
-                        // The text to display when the timer is NOT running
-                        staticText = "${state.selectedVersion?.overridePrepTimeMinutes ?: state.recipeHeader?.defaultPrepTimeMinutes ?: 0} min",
-                        onClick = { onAction(RecipeDetailAction.OnTimerClick(prepTimerStepId)) }
-                    )
+                    val prepTime = state.selectedVersion?.overridePrepTimeMinutes ?: state.recipeHeader?.defaultPrepTimeMinutes
+//                    ##should i make prepTime a non nullable?
+                    if (prepTime != null) {
+                        TimerItem(
+                            isRunning = state.runningTimers.containsKey(prepTimerStepId),
+                            isPaused = state.pausedTimers.contains(prepTimerStepId),
+//                            #do i need this remaining seconds or can i refactor?
+                            remainingSeconds = state.runningTimers[prepTimerStepId] ?: 0L,
+                            // The text to display when the timer is NOT running
+                            staticText = "${state.selectedVersion?.overridePrepTimeMinutes ?: state.recipeHeader?.defaultPrepTimeMinutes ?: 0} min",
+                            onClick = { onAction(RecipeDetailAction.OnTimerClick(prepTimerStepId)) },
+                            onPause = { onAction(RecipeDetailAction.OnPauseTimer(prepTimerStepId)) },
+                            onResume = {
+                                onAction(
+                                    RecipeDetailAction.OnResumeTimer(
+                                        prepTimerStepId
+                                    )
+                                )
+                            }
+                        )
+                    }
 
                     VersionDropdown(
                         versions = state.allVersions,
@@ -136,6 +150,7 @@ private fun RecipeDetailScreen(
                     DirectionStepItem(
                         step = step,
                         isRunning = state.runningTimers.containsKey(step.id),
+                        isPaused = state.pausedTimers.contains(step.id),
                         remainingSeconds = state.runningTimers[step.id],
                         isChecked = step.id in state.checkedStepIds,
                         onAction = onAction
