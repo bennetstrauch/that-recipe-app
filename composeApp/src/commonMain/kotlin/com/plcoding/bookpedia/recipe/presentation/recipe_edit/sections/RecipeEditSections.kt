@@ -22,8 +22,11 @@ import com.plcoding.bookpedia.recipe.domain.MeasureUnit
 import com.plcoding.bookpedia.recipe.domain.RecipeHeader
 import com.plcoding.bookpedia.recipe.domain.RecipeVersion
 import com.plcoding.bookpedia.recipe.domain.StandardIngredient
+import com.plcoding.bookpedia.recipe.domain.TimerInfo
+import com.plcoding.bookpedia.recipe.presentation.recipe_edit.RecipeEditState
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.components.EditableDirectionItem
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.components.EditableIngredientItem
+import com.plcoding.bookpedia.recipe.presentation.recipe_edit.components.TimerPickerDialog
 import com.plcoding.bookpedia.recipe.presentation.recipeedit.RecipeEditAction
 
 
@@ -114,8 +117,26 @@ fun DirectionsSection(
                 step = step,
                 onUpdate = { updatedStep -> onAction(RecipeEditAction.OnUpdateDirection(index, updatedStep)) },
                 onDelete = { onAction(RecipeEditAction.OnDeleteDirection(index)) },
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 8.dp),
+                onEditTimerClick = { onAction(RecipeEditAction.OnShowTimerDialog(index)) }
             )
         }
+    }
+}
+
+
+@Composable
+fun TimerSection(
+dialogStepIndex: Int?,
+timerInfo: TimerInfo?,
+onAction: (RecipeEditAction) -> Unit
+    ){
+    if (dialogStepIndex != null) {
+        TimerPickerDialog(
+            initialTimerInfo = timerInfo,
+            onDismiss = { onAction(RecipeEditAction.OnDismissTimerDialog) },
+            onDelete = { onAction(RecipeEditAction.OnDeleteTimer) },
+            onSave = { h, m, s -> onAction(RecipeEditAction.OnSaveTimer(h, m, s)) }
+        )
     }
 }

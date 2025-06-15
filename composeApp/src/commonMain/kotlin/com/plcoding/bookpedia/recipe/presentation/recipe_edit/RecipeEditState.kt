@@ -16,6 +16,7 @@ data class RecipeEditState(
     val availableCategories: List<Category> = emptyList(),
     val availableMeasureUnits: List<MeasureUnit> = emptyList(),
     val standardIngredientSearchResults: List<StandardIngredient> = emptyList(),
+    val editingTimerForStepIndex: Int? = null,
 
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,

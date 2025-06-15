@@ -16,6 +16,7 @@ import com.plcoding.bookpedia.app.RecipeEdit
 import com.plcoding.bookpedia.core.domain.DataError
 import com.plcoding.bookpedia.core.domain.EmptyResult
 import com.plcoding.bookpedia.recipe.presentation.recipeedit.RecipeEditAction
+import com.plcoding.bookpedia.recipe.presentation.util.toTotalSeconds
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,6 +69,16 @@ class RecipeEditViewModel(
             is RecipeEditAction.OnUpdateIngredient -> updateIngredient(action.index, action.ingredient)
             is RecipeEditAction.OnSearchStandardIngredient -> searchStandardIngredients(action.query)
             is RecipeEditAction.OnSelectStandardIngredient -> selectStandardIngredient(action.index, action.standardIngredient)
+            // Timer
+            is RecipeEditAction.OnShowTimerDialog -> {
+                _state.update { it.copy(editingTimerForStepIndex = action.stepIndex) }
+            }
+//            needed? #
+            is RecipeEditAction.OnDismissTimerDialog -> {
+                _state.update { it.copy(editingTimerForStepIndex = null) }
+            }
+            is RecipeEditAction.OnSaveTimer -> saveTimer(action.hours, action.minutes, action.seconds)
+            is RecipeEditAction.OnDeleteTimer -> deleteTimer()
 
             // Directions
             is RecipeEditAction.OnAddNewDirection -> addDirection()
@@ -260,6 +271,40 @@ class RecipeEditViewModel(
             _state.update { it.copy(selectedVersion = version.copy(directions = updatedDirections)) }
         }
     }
+
+//    --- TIMER HELPER FUNCTIONS ---
+private fun saveTimer(hours: Int, minutes: Int, seconds: Int) {
+    val totalSeconds = toTotalSeconds(hours, minutes, seconds)
+    updateInstructionStepTimer { it.copy(timerInfo = TimerInfo(totalSeconds)) }
+}
+
+    private fun deleteTimer() {
+        updateInstructionStepTimer { it.copy(timerInfo = null) }
+    }
+
+
+    private fun updateInstructionStepTimer(
+        modifier: (InstructionStep) -> InstructionStep
+    ) {
+        _state.update { current ->
+            val index = current.editingTimerForStepIndex ?: return@update current
+            val selectedVersion = current.selectedVersion ?: return@update current
+            val directions = selectedVersion.directions ?: return@update current
+
+            val updatedDirections = directions.toMutableList().apply {
+                this[index] = modifier(this[index])
+            }
+
+            current.copy(
+                selectedVersion = selectedVersion.copy(
+                    directions = updatedDirections
+                ),
+                editingTimerForStepIndex = null
+            )
+        }
+    }
+
+
 
 //    --- SAVE & VALIDATION ---
 

@@ -7,19 +7,24 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.plcoding.bookpedia.recipe.domain.InstructionStep
+import com.plcoding.bookpedia.recipe.presentation.util.formatDuration
 
 @Composable
 fun EditableDirectionItem(
     step: InstructionStep,
     onUpdate: (InstructionStep) -> Unit,
     onDelete: () -> Unit,
+    onEditTimerClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -41,6 +46,24 @@ fun EditableDirectionItem(
                 contentDescription = "Has Timer"
             )
         }
+
+        // Timer Button
+//        TextButton(onClick = onEditTimerClick) {
+//            Icon(
+//                imageVector = Icons.Default.Schedule,
+//                contentDescription = "Edit Timer",
+//                tint = if (step.timerInfo != null) MaterialTheme.colorScheme.primary else LocalContentColor.current
+//            )
+//            // Display current time or "Edit"
+//            val timerDuration = step.timerInfo?.durationSeconds
+//            if (timerDuration != null) {
+//                val buttonText = formatDuration(timerDuration)
+//                Text(buttonText)
+//            }
+//
+//        }
+
+//        #maybe move to left
         IconButton(onClick = onDelete) {
             Icon(Icons.Default.Delete, contentDescription = "Delete Direction")
         }

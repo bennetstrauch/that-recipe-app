@@ -28,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.sections.DirectionsSection
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.sections.GeneralInfoSection
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.sections.IngredientsSection
+import com.plcoding.bookpedia.recipe.presentation.recipe_edit.sections.TimerSection
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.sections.VersionDetailsSection
 import com.plcoding.bookpedia.recipe.presentation.recipeedit.RecipeEditAction
 
@@ -153,5 +154,16 @@ private fun RecipeEditForm(
                 onAction = onAction
             )
         }
+
+        item {
+            TimerSection(
+                dialogStepIndex = state.editingTimerForStepIndex,
+//                # i don't like this complex accessing below.
+                timerInfo = state.editingTimerForStepIndex?.let { state.selectedVersion?.directions?.getOrNull(it)?.timerInfo },
+                onAction = onAction
+            )
+        }
     }
 }
+
+

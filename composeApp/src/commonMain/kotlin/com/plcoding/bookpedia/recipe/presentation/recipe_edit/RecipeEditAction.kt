@@ -21,7 +21,11 @@ sealed interface RecipeEditAction {
     data class OnUpdateIngredient(val index: Int, val ingredient: Ingredient) : RecipeEditAction
     data class OnSearchStandardIngredient(val query: String) : RecipeEditAction
     data class OnSelectStandardIngredient(val index: Int, val standardIngredient: StandardIngredient): RecipeEditAction
-
+    // Timer Actions
+    data class OnShowTimerDialog(val stepIndex: Int) : RecipeEditAction
+    data object OnDismissTimerDialog : RecipeEditAction
+    data class OnSaveTimer(val hours: Int, val minutes: Int, val seconds: Int) : RecipeEditAction
+    data object OnDeleteTimer : RecipeEditAction
 
     // Direction Actions
     data object OnAddNewDirection : RecipeEditAction
