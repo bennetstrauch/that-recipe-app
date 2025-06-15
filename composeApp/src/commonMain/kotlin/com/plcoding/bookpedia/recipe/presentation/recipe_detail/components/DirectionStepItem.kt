@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.plcoding.bookpedia.recipe.domain.InstructionStep
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailAction
+import com.plcoding.bookpedia.recipe.presentation.util.formatDuration
 
 @Composable
 fun DirectionStepItem(
@@ -20,52 +21,26 @@ fun DirectionStepItem(
     isRunning: Boolean,
     remainingSeconds: Long?,
     isChecked: Boolean,
-    onAction: (RecipeDetailAction) -> Unit,
-    modifier: Modifier = Modifier
+    onAction: (RecipeDetailAction) -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier.fillMaxWidth()
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Checkbox(
             checked = isChecked,
             onCheckedChange = { onAction(RecipeDetailAction.OnToggleStepCheck(step.id)) }
         )
-        Text(
-            text = step.description,
+        Text(text = step.description,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (isChecked) Color.Gray else LocalContentColor.current
+            style = MaterialTheme.typography.bodyMedium.copy(
+//                #need to copy style here?
+                color = if (isChecked) Color.Gray else Color.Black
+            )
         )
 
-        // Timer display and button
         if (step.timerInfo != null) {
-            if (isRunning && remainingSeconds != null) {
-                Text(
-                    text = formatDuration(remainingSeconds),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            IconButton(onClick = { onAction(RecipeDetailAction.OnTimerClick(step.id)) }) {
-                Icon(
-                    imageVector = Icons.Default.Schedule,
-                    contentDescription = "Start/Stop Step Timer",
-                    tint = if (isRunning) MaterialTheme.colorScheme.primary else LocalContentColor.current
-                )
-            }
+            TimerItem(isRunning=isRunning, remainingSeconds=remainingSeconds, staticText = "", onClick = { onAction(RecipeDetailAction.OnTimerClick(step.id)) } )
         }
-    }
-}
-
-private fun formatDuration(totalSeconds: Long): String {
-    val hours = totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
-    return if (hours > 0) {
-        "$hours:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
-    } else {
-        "${minutes}:${seconds.toString().padStart(2, '0')}"
     }
 }

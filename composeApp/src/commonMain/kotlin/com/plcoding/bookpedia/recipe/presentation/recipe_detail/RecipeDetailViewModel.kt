@@ -10,7 +10,9 @@ import com.plcoding.bookpedia.core.domain.onSuccess
 import com.plcoding.bookpedia.core.presentation.toUiText
 import com.plcoding.bookpedia.recipe.domain.RecipeRepository
 import com.plcoding.bookpedia.recipe.domain.TimerInfo
-import com.plcoding.bookpedia.recipe.domain.minutesToTimerInfo
+import com.plcoding.bookpedia.recipe.presentation.util.TimerListener
+import com.plcoding.bookpedia.recipe.presentation.util.TimerManager
+import com.plcoding.bookpedia.recipe.presentation.util.minutesToTimerInfo
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -19,17 +21,22 @@ import kotlinx.coroutines.launch
 class RecipeDetailViewModel(
     private val recipeRepository: RecipeRepository,
     private val savedStateHandle: SavedStateHandle
-) : ViewModel() {
+) : ViewModel(), TimerListener {
 
+    private val timerManager = TimerManager(viewModelScope)
     // A map to hold active timer jobs, so they can be cancelled.
-    private val timerJobs = mutableMapOf<String, Job>()
+//    private val timerJobs = mutableMapOf<String, Job>()
+    private val getPrepTime = { state.value.selectedVersion?.overridePrepTimeMinutes ?: state.value.recipeHeader?.defaultPrepTimeMinutes ?: 0 }
+
     companion object {
         const val PREP_TIMER_STEP_ID = "global_prep_timer"
     }
 
+
     private val _state = MutableStateFlow(RecipeDetailState())
     val state = _state.asStateFlow()
 
+//    ?#
     private val headerId: String
 
     init {
@@ -113,9 +120,10 @@ class RecipeDetailViewModel(
                     runningTimers = emptyMap()
                 )
             }
+//            ### do i want this? if not, when to cancel?
             // Cancel all running timers from the previous version
-            timerJobs.values.forEach { it.cancel() }
-            timerJobs.clear()
+//            timerJobs.values.forEach { it.cancel() }
+//            timerJobs.clear()
         }
     }
 
@@ -140,44 +148,48 @@ class RecipeDetailViewModel(
     }
 
     private fun handleTimer(stepId: String) {
-        val timerInfo : TimerInfo
-        if(stepId == PREP_TIMER_STEP_ID){
-//            ## remove nullable from headerField?
-            val prepTime = state.value.selectedVersion?.overridePrepTimeMinutes ?: state.value.recipeHeader?.defaultPrepTimeMinutes ?: 0
-            timerInfo = prepTime.minutesToTimerInfo()
-        }else {
-            val step = _state.value.selectedVersion?.directions?.find { it.id == stepId }
-            timerInfo = step?.timerInfo ?: return // No timer for this step
-        }
-
-        if (timerJobs[stepId]?.isActive == true) {
-            // If timer is already running, cancel it
-            timerJobs[stepId]?.cancel()
-            timerJobs.remove(stepId)
-            _state.update { it.copy(runningTimers = it.runningTimers - stepId) }
-        } else {
-            // Start a new timer
-            timerJobs[stepId] = viewModelScope.launch {
-                var remainingSeconds = timerInfo.durationSeconds
-                while (remainingSeconds > 0) {
-                    _state.update {
-                        it.copy(runningTimers = it.runningTimers + (stepId to remainingSeconds))
-                    }
-                    delay(1000L)
-                    remainingSeconds--
-                }
-                // Timer finished
-                _state.update {
-                    if (stepId != PREP_TIMER_STEP_ID) {
-                        it.copy(
-                            // Automatically check the step once the timer is done
-                            checkedStepIds = it.checkedStepIds + stepId,
-                        )
-                    }
-                    it.copy( runningTimers = it.runningTimers - stepId, )
-                }
-                timerJobs.remove(stepId)
+        if (_state.value.runningTimers.containsKey(stepId)) {
+            timerManager.cancelTimer(stepId)
+            _state.update {
+                it.copy(runningTimers = it.runningTimers - stepId)
             }
+        } else {
+            val timerInfo : TimerInfo
+            if(stepId == PREP_TIMER_STEP_ID){
+//            ## remove nullable from headerField?
+                val prepTime = state.value.selectedVersion?.overridePrepTimeMinutes ?: state.value.recipeHeader?.defaultPrepTimeMinutes ?: 0
+                timerInfo = prepTime.minutesToTimerInfo()
+            }else {
+                val step = _state.value.selectedVersion?.directions?.find { it.id == stepId }
+                timerInfo = step?.timerInfo ?: return // No timer for this step
+            }
+
+            timerManager.startTimer(stepId, timerInfo, this)
         }
+    }
+
+
+
+
+//    #object difference??
+    override fun onTick(stepId: String, remainingSeconds: Long) {
+        _state.update {
+            it.copy(runningTimers = it.runningTimers + (stepId to remainingSeconds))
+        }
+    }
+
+    override fun onFinish(stepId: String) {
+        _state.update {
+            it.copy(
+                runningTimers = it.runningTimers - stepId,
+                checkedStepIds = it.checkedStepIds + stepId
+            )
+        }
+        playAlarm()
+    }
+
+
+    private fun playAlarm() {
+        // Platform-specific solution — pass callback to UI or use shared logic if possible
     }
 }
