@@ -9,6 +9,8 @@ import com.plcoding.bookpedia.core.domain.onError
 import com.plcoding.bookpedia.core.domain.onSuccess
 import com.plcoding.bookpedia.core.presentation.toUiText
 import com.plcoding.bookpedia.recipe.domain.RecipeRepository
+import com.plcoding.bookpedia.recipe.domain.TimerInfo
+import com.plcoding.bookpedia.recipe.domain.minutesToTimerInfo
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -21,6 +23,9 @@ class RecipeDetailViewModel(
 
     // A map to hold active timer jobs, so they can be cancelled.
     private val timerJobs = mutableMapOf<String, Job>()
+    companion object {
+        const val PREP_TIMER_STEP_ID = "global_prep_timer"
+    }
 
     private val _state = MutableStateFlow(RecipeDetailState())
     val state = _state.asStateFlow()
@@ -135,8 +140,15 @@ class RecipeDetailViewModel(
     }
 
     private fun handleTimer(stepId: String) {
-        val step = _state.value.selectedVersion?.directions?.find { it.id == stepId }
-        val timerInfo = step?.timerInfo ?: return // No timer for this step
+        val timerInfo : TimerInfo
+        if(stepId == PREP_TIMER_STEP_ID){
+//            ## remove nullable from headerField?
+            val prepTime = state.value.selectedVersion?.overridePrepTimeMinutes ?: state.value.recipeHeader?.defaultPrepTimeMinutes ?: 0
+            timerInfo = prepTime.minutesToTimerInfo()
+        }else {
+            val step = _state.value.selectedVersion?.directions?.find { it.id == stepId }
+            timerInfo = step?.timerInfo ?: return // No timer for this step
+        }
 
         if (timerJobs[stepId]?.isActive == true) {
             // If timer is already running, cancel it
@@ -156,11 +168,13 @@ class RecipeDetailViewModel(
                 }
                 // Timer finished
                 _state.update {
-                    it.copy(
-                        runningTimers = it.runningTimers - stepId,
-                        // Automatically check the step once the timer is done
-                        checkedStepIds = it.checkedStepIds + stepId
-                    )
+                    if (stepId != PREP_TIMER_STEP_ID) {
+                        it.copy(
+                            // Automatically check the step once the timer is done
+                            checkedStepIds = it.checkedStepIds + stepId,
+                        )
+                    }
+                    it.copy( runningTimers = it.runningTimers - stepId, )
                 }
                 timerJobs.remove(stepId)
             }

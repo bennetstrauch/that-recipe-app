@@ -8,30 +8,31 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
-import androidx.compose.material3.DividerDefaults.color
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.plcoding.bookpedia.recipe.domain.InstructionStep
 import com.plcoding.bookpedia.recipe.domain.RecipeVersion
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.components.IngredientItem
+import com.plcoding.bookpedia.recipe.presentation.recipe_detail.components.TimerItem
 
 // Stateful Root Composable
 @Composable
 fun RecipeDetailScreenRoot(
     viewModel: RecipeDetailViewModel,
     onBackClick: () -> Unit,
-    onEditClick: (recipeHeaderId: String, recipeVersionId: String) -> Unit
+    onEditClick: (recipeHeaderId: String, recipeVersionId: String) -> Unit,
+    prepTimerStepId: String = RecipeDetailViewModel.PREP_TIMER_STEP_ID
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     RecipeDetailScreen(
         state = state,
+        prepTimerStepId = prepTimerStepId,
         onAction = { action ->
             when (action) {
                 is RecipeDetailAction.OnBackClick -> onBackClick()
@@ -47,19 +48,30 @@ fun RecipeDetailScreenRoot(
 @Composable
 private fun RecipeDetailScreen(
     state: RecipeDetailState,
+    prepTimerStepId: String,
     onAction: (RecipeDetailAction) -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(state.recipeHeader?.title ?: "Loading...") },
+
+
+
                 navigationIcon = {
                     IconButton(onClick = { onAction(RecipeDetailAction.OnBackClick) }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    // Version Dropdown
+                    TimerItem(
+                        isRunning = state.runningTimers.containsKey(prepTimerStepId),
+                        remainingSeconds = state.runningTimers[prepTimerStepId],
+                        // The text to display when the timer is NOT running
+                        staticText = "${state.selectedVersion?.overridePrepTimeMinutes ?: state.recipeHeader?.defaultPrepTimeMinutes ?: 0} min",
+                        onClick = { onAction(RecipeDetailAction.OnTimerClick(prepTimerStepId)) }
+                    )
+
                     VersionDropdown(
                         versions = state.allVersions,
                         selectedVersionId = state.selectedVersion?.id,
@@ -168,25 +180,28 @@ private fun DirectionStepItem(
         )
         )
 
-        // Timer display and button
-        if (step.timerInfo != null) {
-            if (isRunning && remainingSeconds != null) {
-                // Display running timer
-                Text(
-                    text = formatDuration(remainingSeconds),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            // Timer Icon Button
-            IconButton(onClick = { onAction(RecipeDetailAction.OnTimerClick(step.id)) }) {
-                Icon(
-                    imageVector = Icons.Default.Schedule, // Corrected icon
-                    contentDescription = "Start/Stop Timer",
-                    tint = if (isRunning) MaterialTheme.colorScheme.primary else LocalContentColor.current
-                )
-            }
-        }
+        TimerItem(isRunning=isRunning, remainingSeconds=remainingSeconds, staticText = "", onClick = { onAction(RecipeDetailAction.OnTimerClick(step.id)) } )
+
+
+//        // Timer display and button
+//        if (step.timerInfo != null) {
+//            if (isRunning && remainingSeconds != null) {
+//                // Display running timer
+//                Text(
+//                    text = formatDuration(remainingSeconds),
+//                    style = MaterialTheme.typography.bodyLarge,
+//                    color = MaterialTheme.colorScheme.primary
+//                )
+//            }
+//            // Timer Icon Button
+//            IconButton(onClick = { onAction(RecipeDetailAction.OnTimerClick(step.id)) }) {
+//                Icon(
+//                    imageVector = Icons.Default.Schedule, // Corrected icon
+//                    contentDescription = "Start/Stop Timer",
+//                    tint = if (isRunning) MaterialTheme.colorScheme.primary else LocalContentColor.current
+//                )
+//            }
+//        }
     }
 }
 
