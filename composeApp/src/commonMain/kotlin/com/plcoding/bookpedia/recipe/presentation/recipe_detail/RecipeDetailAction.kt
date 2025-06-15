@@ -7,6 +7,8 @@ sealed interface RecipeDetailAction {
     data object OnBackClick : RecipeDetailAction
     data object OnEditClick : RecipeDetailAction
     data object OnTogglePictureVisibility : RecipeDetailAction
+    data object OnToggleMetaInfo : RecipeDetailAction
+
     data class OnSelectVersion(val versionId: String) : RecipeDetailAction
     data class OnToggleIngredientCheck(val ingredientId: String) : RecipeDetailAction
     data class OnToggleStepCheck(val stepId: String) : RecipeDetailAction

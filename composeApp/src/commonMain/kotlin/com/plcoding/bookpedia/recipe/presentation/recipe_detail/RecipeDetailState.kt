@@ -6,10 +6,12 @@ import com.plcoding.bookpedia.recipe.domain.RecipeVersion
 
 data class RecipeDetailState(
     val isLoading: Boolean = true,
+    val isPictureVisible: Boolean = true,
+    val isMetaInfoExpanded: Boolean = true,
+
     val recipeHeader: RecipeHeader? = null,
     val allVersions: List<RecipeVersion> = emptyList(),
     val selectedVersion: RecipeVersion? = null,
-    val isPictureVisible: Boolean = true,
     val checkedIngredientIds: Set<String> = emptySet(),
     val checkedStepIds: Set<String> = emptySet(),
     // Map of <InstructionStep.id, RemainingSeconds>

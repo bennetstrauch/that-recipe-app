@@ -19,6 +19,7 @@ import com.plcoding.bookpedia.recipe.domain.InstructionStep
 import com.plcoding.bookpedia.recipe.domain.RecipeVersion
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.components.DirectionStepItem
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.components.IngredientItem
+import com.plcoding.bookpedia.recipe.presentation.recipe_detail.components.MetaInfoSection
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.components.TimerItem
 
 // Stateful Root Composable
@@ -98,6 +99,16 @@ private fun RecipeDetailScreen(
                     }
                 }
             )
+        },
+        bottomBar = {
+            if (state.recipeHeader != null && state.selectedVersion != null) {
+                MetaInfoSection(
+                    categoryName = state.recipeHeader.category.name,
+                    versionCommentary = state.selectedVersion.versionCommentary,
+                    isExpanded = state.isMetaInfoExpanded,
+                    onToggle = { onAction(RecipeDetailAction.OnToggleMetaInfo) }
+                )
+            }
         }
     ) { paddingValues ->
         if (state.isLoading) {
@@ -156,16 +167,7 @@ private fun RecipeDetailScreen(
                         onAction = onAction
                     )
                 }
-                // --- Version Commentary Section ---
-                state.selectedVersion.versionCommentary?.let { commentary ->
-                    if(commentary.isNotBlank()) {
-                        item {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Notes on this version:", style = MaterialTheme.typography.titleMedium)
-                            Text(commentary, style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                }
+
             }
         }
     }

@@ -56,6 +56,9 @@ class RecipeDetailViewModel(
             is RecipeDetailAction.OnTogglePictureVisibility -> {
                 _state.update { it.copy(isPictureVisible = !it.isPictureVisible) }
             }
+            is RecipeDetailAction.OnToggleMetaInfo -> {
+                _state.update { it.copy(isMetaInfoExpanded = !it.isMetaInfoExpanded) }
+            }
             is RecipeDetailAction.OnTimerClick -> handleTimer(action.stepId)
             is RecipeDetailAction.OnPauseTimer -> pauseTimer(action.stepId)
             is RecipeDetailAction.OnResumeTimer -> resumeTimer(action.stepId)
