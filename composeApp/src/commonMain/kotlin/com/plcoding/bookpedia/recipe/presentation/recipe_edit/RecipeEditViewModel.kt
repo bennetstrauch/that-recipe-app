@@ -73,7 +73,7 @@ class RecipeEditViewModel(
             is RecipeEditAction.OnShowTimerDialog -> {
                 _state.update { it.copy(editingTimerForStepIndex = action.stepIndex) }
             }
-//            needed? #
+//            needed? ##
             is RecipeEditAction.OnDismissTimerDialog -> {
                 _state.update { it.copy(editingTimerForStepIndex = null) }
             }
@@ -85,6 +85,11 @@ class RecipeEditViewModel(
             is RecipeEditAction.OnDeleteDirection -> deleteDirection(action.index)
             is RecipeEditAction.OnUpdateDirection -> updateDirection(action.index, action.step)
 
+            // Categories
+            // In the `when(action)` block
+            is RecipeEditAction.OnCategoryManagerClick -> _state.update { it.copy(isCategorySheetOpen = true) }
+            is RecipeEditAction.OnDismissCategoryManager -> _state.update { it.copy(isCategorySheetOpen = false) }
+
             // Saving
             is RecipeEditAction.OnOverwriteVersionClick -> saveChanges()
             is RecipeEditAction.OnSaveAsNewVersionClick -> saveAsNewVersion()
@@ -94,13 +99,15 @@ class RecipeEditViewModel(
     }
 
     private fun loadDropdownData() {
+        // # separate DAO for measureUnits / categories
         viewModelScope.launch {
-            // ## separate DAO for measureUnits
-            val unitsResult = recipeRepository.getAllMeasureUnits()
-//             val categoriesResult = recipeRepository.getAllCategories()
-
-            unitsResult.onSuccess { units ->
+            recipeRepository.getAllMeasureUnits().onSuccess { units ->
                 _state.update { it.copy(availableMeasureUnits = units) }
+            }
+            recipeRepository.getAllCategories().collect { result ->
+                result.onSuccess { categories ->
+                    _state.update { it.copy(availableCategories = categories) }
+                }
             }
         }
     }

@@ -91,6 +91,9 @@ interface RecipeDao {
     @Query("SELECT * FROM StandardIngredientEntity WHERE name LIKE '%' || :query || '%'")
     suspend fun searchStandardIngredients(query: String): List<StandardIngredientEntity>
 
+    @Transaction
+    @Query("SELECT * FROM CategoryEntity ORDER BY name ASC")
+    fun getAllCategories(): Flow<List<CategoryEntity>>
 
     // --- Efficient Batch Fetching for Mappers ---
 

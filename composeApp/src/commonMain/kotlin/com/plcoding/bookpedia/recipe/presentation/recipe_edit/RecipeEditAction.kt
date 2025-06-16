@@ -32,6 +32,10 @@ sealed interface RecipeEditAction {
     data class OnDeleteDirection(val index: Int) : RecipeEditAction
     data class OnUpdateDirection(val index: Int, val step: InstructionStep) : RecipeEditAction
 
+    // Category Actions
+    data object OnCategoryManagerClick : RecipeEditAction
+    data object OnDismissCategoryManager : RecipeEditAction
+
     // Main Actions
     data object OnOverwriteVersionClick : RecipeEditAction
     data object OnSaveAsNewVersionClick : RecipeEditAction

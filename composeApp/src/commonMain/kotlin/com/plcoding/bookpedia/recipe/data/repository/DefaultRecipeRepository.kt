@@ -5,6 +5,7 @@ package com.plcoding.bookpedia.recipe.data.repository
 import com.plcoding.bookpedia.core.domain.DataError
 import com.plcoding.bookpedia.core.domain.EmptyResult
 import com.plcoding.bookpedia.core.domain.Result
+import com.plcoding.bookpedia.recipe.data.database.CategoryEntity
 import com.plcoding.bookpedia.recipe.data.database.RecipeDao
 import com.plcoding.bookpedia.recipe.data.database.RecipeHeaderTransferEntity
 import com.plcoding.bookpedia.recipe.data.database.RecipeVersionTransferEntity
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
+import kotlin.collections.map
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -257,7 +259,16 @@ class DefaultRecipeRepository(
         }
     }
 
-
+    override fun getAllCategories(): Flow<Result<List<Category>, DataError.Local>> {
+        return dao.getAllCategories()
+            .map<List<CategoryEntity>, Result<List<Category>, DataError.Local>> { list ->
+                Result.Success(list.map { it.toDomain() })
+            }
+            .catch { e ->
+                e.printStackTrace()
+                emit(Result.Error(DataError.Local.UNKNOWN))
+            }
+    }
 
 
     override fun isRecipeFavorite(headerId: String): Flow<Boolean> {

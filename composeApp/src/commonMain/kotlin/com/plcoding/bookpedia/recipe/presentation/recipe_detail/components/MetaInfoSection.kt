@@ -63,7 +63,8 @@ fun MetaInfoSection(
                     Column {
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = versionCommentary,
+//                            ##make that more professional
+                            text = "            $versionCommentary",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }

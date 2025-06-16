@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.plcoding.bookpedia.recipe.domain.Category
 import com.plcoding.bookpedia.recipe.domain.Ingredient
 import com.plcoding.bookpedia.recipe.domain.InstructionStep
 import com.plcoding.bookpedia.recipe.domain.MeasureUnit
@@ -23,7 +24,7 @@ import com.plcoding.bookpedia.recipe.domain.RecipeHeader
 import com.plcoding.bookpedia.recipe.domain.RecipeVersion
 import com.plcoding.bookpedia.recipe.domain.StandardIngredient
 import com.plcoding.bookpedia.recipe.domain.TimerInfo
-import com.plcoding.bookpedia.recipe.presentation.recipe_edit.RecipeEditState
+import com.plcoding.bookpedia.recipe.presentation.recipe_edit.components.CategoryDropdown
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.components.EditableDirectionItem
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.components.EditableIngredientItem
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.components.TimerPickerDialog
@@ -32,8 +33,8 @@ import com.plcoding.bookpedia.recipe.presentation.recipeedit.RecipeEditAction
 
 @Composable
 fun GeneralInfoSection(
-    // This component now only takes the specific data it needs
     header: RecipeHeader?,
+    categories: List<Category>,
     onAction: (RecipeEditAction) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -44,7 +45,14 @@ fun GeneralInfoSection(
             label = { Text("Recipe Title") },
             modifier = Modifier.fillMaxWidth()
         )
-        // TODO: Add a dropdown here to select from available categories
+        CategoryDropdown(
+            categories = categories,
+//            ## what does next line after ?: do ?
+            selectedCategory = header?.category ?: Category("", "Select..."),
+            onCategorySelected = { onAction(RecipeEditAction.OnCategoryChanged(it)) },
+            onNewCategoryClick = { onAction(RecipeEditAction.OnCategoryManagerClick) },
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 

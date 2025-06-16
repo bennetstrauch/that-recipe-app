@@ -12,7 +12,6 @@ interface RecipeRepository {
     suspend fun saveAsNewVersion(header: RecipeHeader, newVersion: RecipeVersion): EmptyResult<DataError.Local>
     suspend fun insertStandardIngredient(ingredient: StandardIngredient) : EmptyResult<DataError.Local>
 
-
     // --- Read Functions ---
     fun getAllRecipeHeaders(): Flow<Result<List<RecipeHeader>, DataError.Local>>
     fun searchRecipes(query: String): Flow<Result<List<RecipeHeader>, DataError>>
@@ -21,7 +20,7 @@ interface RecipeRepository {
     fun getVersionsForRecipe(headerId: String): Flow<Result<List<RecipeVersion>, DataError.Local>>
     suspend fun getAllMeasureUnits(): Result<List<MeasureUnit>, DataError.Local>
     suspend fun searchStandardIngredients(query: String): Result<List<StandardIngredient>, DataError>
-
+    fun getAllCategories(): Flow<Result<List<Category>, DataError.Local>>
 
     // --- Favorite Functions ---
     fun isRecipeFavorite(headerId: String): Flow<Boolean>

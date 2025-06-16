@@ -22,6 +22,7 @@ data class RecipeEditState(
     val isSaving: Boolean = false,
     val isFinished: Boolean = false, // Becomes true after successful save
     val isEditing: Boolean = false, // Becomes true after loading a recipe for editing
+    val isCategorySheetOpen: Boolean = false,
 
     val error: UiText? = null,
 )
