@@ -62,6 +62,18 @@ class RecipeDetailViewModel(
             is RecipeDetailAction.OnTimerClick -> handleTimer(action.stepId)
             is RecipeDetailAction.OnPauseTimer -> pauseTimer(action.stepId)
             is RecipeDetailAction.OnResumeTimer -> resumeTimer(action.stepId)
+//            ##extract
+            is RecipeDetailAction.OnFavoriteClick -> {
+                viewModelScope.launch {
+                    state.value.recipeHeader?.let {
+                        if(it.isFavorite) {
+                            recipeRepository.removeFromFavorites(headerId)
+                        } else {
+                            recipeRepository.markAsFavorite(headerId)
+                        }
+                    }
+                }
+            }
             else -> Unit
         }
     }

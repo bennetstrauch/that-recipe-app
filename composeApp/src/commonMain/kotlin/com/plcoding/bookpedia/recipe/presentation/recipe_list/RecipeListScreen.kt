@@ -1,11 +1,9 @@
 package com.plcoding.bookpedia.recipe.presentation.recipe_list
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -14,33 +12,47 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.plcoding.bookpedia.core.presentation.UiText // Assuming these exist
-import com.plcoding.bookpedia.recipe.domain.Category
+import com.plcoding.bookpedia.core.presentation.components.SmallActionButton
 import com.plcoding.bookpedia.recipe.domain.RecipeHeader
+import com.plcoding.bookpedia.recipe.presentation.recipe_list.components.ParseUrlDialog
 import com.plcoding.bookpedia.recipe.presentation.recipe_list.components.RecipeSearchBar
 import com.plcoding.recipepedia.recipe.presentation.recipe_list.components.RecipeList
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun RecipeListScreenRoot(
     viewModel: RecipeListViewModel = koinViewModel(),
     onRecipeClick: (RecipeHeader) -> Unit,
-    onAddRecipeClick: () -> Unit,
+    onNavigateToEditScreen: (headerId: String?) -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(state.parsedRecipeId) {
+        if (state.parsedRecipeId != null) {
+            onNavigateToEditScreen(state.parsedRecipeId)
+            viewModel.onAction(RecipeListAction.OnNavigatedToEditScreen)
+        }
+    }
+
+    if (state.isParseUrlDialogOpen) {
+        ParseUrlDialog(
+            isParsing = state.isParsing,
+            error = state.parseError,
+            onDismiss = { viewModel.onAction(RecipeListAction.OnParseDialogDismiss) },
+            onParse = { url -> viewModel.onAction(RecipeListAction.OnParseUrl(url)) }
+        )
+    }
 
     RecipeListScreen(
         state = state,
         onAction = { action ->
             when (action) {
                 is RecipeListAction.OnRecipeClick -> onRecipeClick(action.recipe)
-                is RecipeListAction.OnAddRecipeClick -> onAddRecipeClick() // <-- HANDLE THE NEW ACTION
+                is RecipeListAction.OnCreateFromScratchClick -> onNavigateToEditScreen(null) // <-- HANDLE THE NEW ACTION
                 else -> viewModel.onAction(action)
             }
         }
@@ -53,6 +65,7 @@ private fun RecipeListScreen(
     state: RecipeListState,
     onAction: (RecipeListAction) -> Unit,
 ){
+
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val pagerState = rememberPagerState { 2 }
@@ -89,19 +102,51 @@ private fun RecipeListScreen(
         },
 
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    onAction(RecipeListAction.OnAddRecipeClick)
-                },
-                containerColor = MaterialTheme.colorScheme.primary
+            Box(
+                contentAlignment = Alignment.BottomEnd,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(end = 16.dp, bottom = 16.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add new recipe"
-                )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    if (state.isAddRecipeMenuExpanded) {
+                        SmallActionButton(
+                            label = "From Image",
+                            onClick = {
+                                onAction(RecipeListAction.OnCreateFromImageClick)
+                            }
+                        )
+                        SmallActionButton(
+                            label = "From Web Link",
+                            onClick = {
+                                onAction(RecipeListAction.OnCreateFromUrlClick)
+                            }
+                        )
+                        SmallActionButton(
+                            label = "From Scratch",
+                            onClick = {
+                                onAction(RecipeListAction.OnCreateFromScratchClick)
+                            }
+                        )
+                    }
+
+                    FloatingActionButton(
+                        onClick = { onAction(RecipeListAction.OnAddRecipeClick) },
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add new recipe"
+                        )
+                    }
+                }
             }
-        },
-        floatingActionButtonPosition = FabPosition.End
+        }
+
+//        floatingActionButtonPosition = FabPosition.End
 
     ) { paddingValues ->
         Column(
@@ -179,6 +224,34 @@ private fun RecipeListScreen(
             }
         }
     }
+
+//    ##remove
+//    if (showCreationOptions) {
+//        ModalBottomSheet(onDismissRequest = { showCreationOptions = false }) {
+//            Column(Modifier.padding(16.dp)) {
+//                Text("Create Recipe", style = MaterialTheme.typography.titleMedium)
+//                Spacer(Modifier.height(12.dp))
+//                Button(onClick = {
+//                    showCreationOptions = false
+//                    onAction(RecipeListAction.OnCreateFromImageClick)
+//                }) {
+//                    Text("From Image")
+//                }
+//                Button(onClick = {
+//                    showCreationOptions = false
+//                    onAction(RecipeListAction.OnCreateFromUrlClick)
+//                }) {
+//                    Text("From Web Link")
+//                }
+//                Button(onClick = {
+//                    showCreationOptions = false
+//                    onAction(RecipeListAction.OnCreateFromScratchClick)
+//                }) {
+//                    Text("From Scratch")
+//                }
+//            }
+//        }
+//    }
 }
 
 

@@ -8,4 +8,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.room) apply false
+//    alias(libs.plugins.buildkonfig) apply false
+//    id("com.codingfeline.buildkonfig") version "0.17.1" apply false
+
 }

@@ -27,4 +27,7 @@ interface RecipeRepository {
     suspend fun markAsFavorite(headerId: String): EmptyResult<DataError.Local>
     suspend fun removeFromFavorites(headerId: String): EmptyResult<DataError.Local>
 
+    // --- Parsing Functions ---
+    suspend fun parseRecipeFromUrl(url: String): Result<Pair<RecipeHeader, RecipeVersion>, DataError>
+
 }

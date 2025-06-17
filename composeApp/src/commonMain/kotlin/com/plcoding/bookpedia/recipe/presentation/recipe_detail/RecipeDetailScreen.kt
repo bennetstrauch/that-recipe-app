@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme
@@ -56,8 +58,20 @@ private fun RecipeDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(state.recipeHeader?.title ?: "Loading...") },
-
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(state.recipeHeader?.title ?: "Loading...")
+                        IconButton(
+                            onClick = { onAction(RecipeDetailAction.OnFavoriteClick) },
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (state.recipeHeader?.isFavorite == true) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Toggle Favorite"
+                            )
+                        }
+                    }
+                },
 
 
                 navigationIcon = {

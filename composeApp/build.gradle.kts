@@ -1,6 +1,8 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+//import com.codingfeline.buildkonfig.gradle.BuildKonfigExtension
+
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -10,6 +12,8 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+//    alias(libs.plugins.buildkonfig)
+//    id("com.codingfeline.buildkonfig") version "0.17.1"
 }
 
 kotlin {
@@ -74,6 +78,9 @@ kotlin {
 
             implementation(libs.bundles.ktor)
             implementation(libs.bundles.coil)
+
+//            added:
+//            implementation("com.codingfeline.buildkonfig:com.codingfeline.buildkonfig.gradle.plugin:0.17.1")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -89,6 +96,19 @@ kotlin {
         }
     }
 }
+
+//buildKonfig {
+//    packageName = "com.plcoding.bookpedia"
+//
+//    defaultConfigs {
+//        buildConfigField(
+//            type = "STRING",
+//            name = "OPENAI_API_KEY",
+//            value = "\"${project.findProperty("OPENAI_API_KEY") ?: "MISSING"}\""
+//        )
+//    }
+//}
+
 
 android {
     namespace = "com.plcoding.bookpedia"
@@ -132,3 +152,4 @@ compose.desktop {
         }
     }
 }
+

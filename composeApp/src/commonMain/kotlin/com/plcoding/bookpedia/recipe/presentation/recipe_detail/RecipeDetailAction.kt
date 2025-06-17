@@ -16,4 +16,6 @@ sealed interface RecipeDetailAction {
     data class OnTimerClick(val stepId: String) : RecipeDetailAction
     data class OnPauseTimer(val stepId: String) : RecipeDetailAction
     data class OnResumeTimer(val stepId: String) : RecipeDetailAction
+
+    data object OnFavoriteClick: RecipeDetailAction
 }

@@ -41,9 +41,11 @@ fun App() {
                             RecipeDetail(recipeHeaderId = recipeHeader.id)
                         )
                     },
-                    onAddRecipeClick = {
+
+                    onNavigateToEditScreen = {
                         navController.navigate(
-                            RecipeEdit(recipeHeaderId = null, recipeVersionId = null)
+//                            ##nullversionid?
+                            RecipeEdit(recipeHeaderId = it, recipeVersionId = null)
                         )
                     }
                 )

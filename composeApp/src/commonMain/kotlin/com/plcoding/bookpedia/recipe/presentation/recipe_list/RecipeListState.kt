@@ -8,7 +8,15 @@ data class RecipeListState (
     val searchResults: List<RecipeHeader> = emptyList(),
     val favoriteRecipes: List<RecipeHeader> = emptyList(),
     val selectedTabIndex: Int = 0,
-    val errorMessage: UiText? = null,
     val isLoading: Boolean = true,
+
+    val errorMessage: UiText? = null,
+
+//    ADDING:
+    val isAddRecipeMenuExpanded: Boolean = false, // To control the new FAB menu
+    val isParsing: Boolean = false,
+    val isParseUrlDialogOpen: Boolean = false,
+    val parsedRecipeId: String? = null, // To trigger navigation after a successful parse
+    val parseError: UiText? = null
 
     )

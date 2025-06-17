@@ -2,6 +2,9 @@ rootProject.name = "CMP-Bookpedia"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
+//    plugins{
+//        id("com.codingfeline.buildkonfig") version "0.17.1"
+//    }
     repositories {
         google {
             mavenContent {
