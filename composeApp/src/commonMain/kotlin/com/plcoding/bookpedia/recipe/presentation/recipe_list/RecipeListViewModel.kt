@@ -24,6 +24,10 @@ class RecipeListViewModel(
     private val parseRecipeFromUrlUseCase: ParseRecipeFromUrlUseCase // Ensure this is injected via Koin
 ) : ViewModel() {
 
+    companion object{
+        private const val DEFAULT_PREVIEW_URL = "https://www.skinnytaste.com/"
+    }
+
     private val _state = MutableStateFlow(RecipeListState())
     val state = _state.asStateFlow()
 
@@ -60,8 +64,20 @@ class RecipeListViewModel(
             is RecipeListAction.OnNavigatedToEditScreen -> {
                 _state.update { it.copy(parsedRecipeId = null) }
             }
-            is RecipeListAction.OnParseDialogDismiss -> parseDialogDismiss()
-            is RecipeListAction.OnParseUrl -> parseUrl(action.url)
+//            is RecipeListAction.OnParseDialogDismiss -> parseDialogDismiss()
+//            is RecipeListAction.OnParseUrl -> parseUrl(action.url)
+            is RecipeListAction.OnUrlEntered -> {
+                _state.update { it.copy(urlToPreview = action.url) }
+            }
+            is RecipeListAction.OnPreviewUrl -> {
+                _state.update { it.copy(isWebPreviewDialogOpen = true) }
+            }
+            is RecipeListAction.OnDismissWebPreviewDialog -> {
+                _state.update { it.copy(isWebPreviewDialogOpen = false) }
+            }
+            is RecipeListAction.OnParseFromPreview -> {
+                parseUrl(state.value.urlToPreview)
+            }
 
         }
     }
@@ -107,8 +123,10 @@ class RecipeListViewModel(
     private fun createFromUrlClick() {
         _state.update {
             it.copy(
-                isParseUrlDialogOpen = true,
-                isAddRecipeMenuExpanded = false
+                isWebPreviewDialogOpen = true,
+//                isParseUrlDialogOpen = true,
+                isAddRecipeMenuExpanded = false,
+                urlToPreview = DEFAULT_PREVIEW_URL
             )
         }
     }
@@ -116,7 +134,9 @@ class RecipeListViewModel(
     private fun parseDialogDismiss(): Unit {
         _state.update {
             it.copy(
-                isParseUrlDialogOpen = false,
+                isWebPreviewDialogOpen = false,
+
+//                isParseUrlDialogOpen = false,
                 isParsing = false,
                 parseError = null
             )
@@ -138,7 +158,9 @@ class RecipeListViewModel(
                     _state.update {
                         it.copy(
                             isParsing = false,
-                            isParseUrlDialogOpen = false,
+                            isWebPreviewDialogOpen = false,
+
+//                            isParseUrlDialogOpen = false,
                             parsedRecipeId = newHeaderId // This triggers navigation
                         )
                     }

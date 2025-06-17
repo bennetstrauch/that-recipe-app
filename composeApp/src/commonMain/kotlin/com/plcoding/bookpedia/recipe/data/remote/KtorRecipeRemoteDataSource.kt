@@ -32,8 +32,8 @@ class KtorRecipeRemoteDataSource(
     }
 
     private suspend fun callAiToParseText(text: String): String {
-        val apiKey = System.getenv("OPENAI_API_KEY")
-            ?: throw IllegalStateException("OPENAI_API_KEY not set")
+//        val apiKey = System.getenv("OPENAI_API_KEY")
+//            ?: throw IllegalStateException("OPENAI_API_KEY not set")
 
 
         // In a real app, you would make a Ktor call to the Gemini/OpenAI API here.

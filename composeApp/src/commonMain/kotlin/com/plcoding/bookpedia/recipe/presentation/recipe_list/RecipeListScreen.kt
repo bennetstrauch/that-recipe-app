@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.plcoding.bookpedia.core.presentation.components.SmallActionButton
 import com.plcoding.bookpedia.recipe.domain.RecipeHeader
 import com.plcoding.bookpedia.recipe.presentation.recipe_list.components.ParseUrlDialog
+import com.plcoding.bookpedia.recipe.presentation.recipe_list.components.RecipePreviewDialog
 import com.plcoding.bookpedia.recipe.presentation.recipe_list.components.RecipeSearchBar
 import com.plcoding.recipepedia.recipe.presentation.recipe_list.components.RecipeList
 import org.koin.compose.viewmodel.koinViewModel
@@ -38,13 +39,26 @@ fun RecipeListScreenRoot(
         }
     }
 
-    if (state.isParseUrlDialogOpen) {
-        ParseUrlDialog(
+//    if (state.isParseUrlDialogOpen) {
+//        ParseUrlDialog(
+//            isParsing = state.isParsing,
+//            error = state.parseError,
+//            onDismiss = { viewModel.onAction(RecipeListAction.OnParseDialogDismiss) },
+//            onParse = { url -> viewModel.onAction(RecipeListAction.OnParseUrl(url)) }
+//        )
+//    }
+
+    if (state.isWebPreviewDialogOpen){
+        RecipePreviewDialog(
+            url = state.urlToPreview,
             isParsing = state.isParsing,
-            error = state.parseError,
-            onDismiss = { viewModel.onAction(RecipeListAction.OnParseDialogDismiss) },
-            onParse = { url -> viewModel.onAction(RecipeListAction.OnParseUrl(url)) }
+            onUrlChange = { viewModel.onAction(RecipeListAction.OnUrlEntered(it)) },
+//            ##needed?
+            onLoad = { },
+            onParse = { viewModel.onAction(RecipeListAction.OnParseFromPreview) },
+            onDismiss = { viewModel.onAction(RecipeListAction.OnDismissWebPreviewDialog) }
         )
+
     }
 
     RecipeListScreen(

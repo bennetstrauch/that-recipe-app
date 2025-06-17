@@ -79,6 +79,8 @@ kotlin {
             implementation(libs.bundles.ktor)
             implementation(libs.bundles.coil)
 
+//            added: ##make nice in toml file
+            api("io.github.kevinnzou:compose-webview-multiplatform:1.3.0")
 //            added:
 //            implementation("com.codingfeline.buildkonfig:com.codingfeline.buildkonfig.gradle.plugin:0.17.1")
         }

@@ -15,8 +15,13 @@ data class RecipeListState (
 //    ADDING:
     val isAddRecipeMenuExpanded: Boolean = false, // To control the new FAB menu
     val isParsing: Boolean = false,
-    val isParseUrlDialogOpen: Boolean = false,
+
+//    val isParseUrlDialogOpen: Boolean = false,
+    val isWebPreviewDialogOpen: Boolean = false,
+    val urlToPreview: String = "",
+
     val parsedRecipeId: String? = null, // To trigger navigation after a successful parse
     val parseError: UiText? = null
+
 
     )

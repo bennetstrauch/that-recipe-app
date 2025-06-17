@@ -12,7 +12,16 @@ sealed interface RecipeListAction {
     data object OnCreateFromScratchClick : RecipeListAction
     data object OnCreateFromUrlClick : RecipeListAction
     data object OnCreateFromImageClick : RecipeListAction // For the future
-    data object OnParseDialogDismiss : RecipeListAction
-    data class OnParseUrl(val url: String) : RecipeListAction
+
+
+    data class OnUrlEntered(val url: String) : RecipeListAction
+    data object OnParseFromPreview : RecipeListAction
+
+//    data class OnParseUrl(val url: String) : RecipeListAction
+
+    data object OnPreviewUrl : RecipeListAction
+    data object OnDismissWebPreviewDialog : RecipeListAction
+//    data object OnParseDialogDismiss : RecipeListAction
+
     data object OnNavigatedToEditScreen: RecipeListAction
 }

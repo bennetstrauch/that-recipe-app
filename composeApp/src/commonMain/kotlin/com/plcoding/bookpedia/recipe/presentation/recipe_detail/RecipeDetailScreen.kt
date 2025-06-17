@@ -1,5 +1,6 @@
 package com.plcoding.bookpedia.recipe.presentation.recipe_detail
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,9 +15,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.plcoding.bookpedia.core.presentation.SandYellow
 import com.plcoding.bookpedia.recipe.domain.InstructionStep
 import com.plcoding.bookpedia.recipe.domain.RecipeVersion
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.components.DirectionStepItem
@@ -64,6 +67,7 @@ private fun RecipeDetailScreen(
                         IconButton(
                             onClick = { onAction(RecipeDetailAction.OnFavoriteClick) },
                             modifier = Modifier.padding(start = 8.dp)
+
                         ) {
                             Icon(
                                 imageVector = if (state.recipeHeader?.isFavorite == true) Icons.Default.Favorite else Icons.Default.FavoriteBorder,

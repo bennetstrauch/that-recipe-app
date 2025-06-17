@@ -298,6 +298,6 @@ class DefaultRecipeRepository(
     }
 
     override suspend fun parseRecipeFromUrl(url: String): Result<Pair<RecipeHeader, RecipeVersion>, DataError> {
-
+        return Result.Error(DataError.Remote.UNKNOWN)
     }
 }
