@@ -4,9 +4,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,16 +33,19 @@ fun SmallActionButton(
         color = MaterialTheme.colorScheme.surfaceVariant,
         onClick = onClick,
         modifier = Modifier
-            .defaultMinSize(minWidth = 160.dp)
+//            .defaultMinSize(minWidth = 160.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 12.dp)
+                .width(100.dp)
         ) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onPrimary
             )
         }
     }

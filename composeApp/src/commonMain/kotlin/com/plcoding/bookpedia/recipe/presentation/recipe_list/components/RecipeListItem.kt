@@ -47,6 +47,7 @@ import cmp_bookpedia.composeapp.generated.resources.book_error_2
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import com.plcoding.bookpedia.core.presentation.LightBlue
+import com.plcoding.bookpedia.core.presentation.LightGreen
 import com.plcoding.bookpedia.core.presentation.PulseAnimation
 import com.plcoding.bookpedia.core.presentation.SandYellow
 import com.plcoding.bookpedia.recipe.domain.RecipeHeader
@@ -64,7 +65,7 @@ fun RecipeListItem(
         shape = RoundedCornerShape(32.dp),
         modifier = modifier
             .clickable(onClick = onClick),
-        color = LightBlue.copy(alpha = 0.2f)
+        color = LightGreen.copy(alpha = 0.2f)
     ) {
         Row(
             modifier = Modifier

@@ -1,9 +1,11 @@
 package com.plcoding.bookpedia.recipe.presentation.recipe_list
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -16,6 +18,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.room.util.TableInfo
 import com.plcoding.bookpedia.core.presentation.components.SmallActionButton
 import com.plcoding.bookpedia.recipe.domain.RecipeHeader
 import com.plcoding.bookpedia.recipe.presentation.recipe_list.components.ParseUrlDialog
@@ -98,7 +101,20 @@ private fun RecipeListScreen(
         }
     }
 
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(MaterialTheme.colorScheme.primary) // or a custom color like DarkBlue
+//            .statusBarsPadding()
+//    ){
+//    Box{
+//
+//    }
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.statusBarsPadding().background(MaterialTheme.colorScheme.primary),
+
+
         topBar = {
             RecipeSearchBar(
                 searchQuery = state.searchQuery,
@@ -163,10 +179,16 @@ private fun RecipeListScreen(
 //        floatingActionButtonPosition = FabPosition.End
 
     ) { paddingValues ->
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            color = MaterialTheme.colorScheme.background, // or custom like DesertWhite
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
         ) {
             TabRow(
                 selectedTabIndex = state.selectedTabIndex,
@@ -194,9 +216,9 @@ private fun RecipeListScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    when(pageIndex) {
+                    when (pageIndex) {
                         0 -> { // Search Results Tab
-                            if(state.isLoading) {
+                            if (state.isLoading) {
                                 CircularProgressIndicator()
                             } else if (state.errorMessage != null) {
                                 Text(
@@ -207,8 +229,7 @@ private fun RecipeListScreen(
                                 )
                             } else if (state.searchQuery.isNotBlank() && state.searchResults.isEmpty()) {
                                 Text("No results for '${state.searchQuery}'")
-                            }
-                            else {
+                            } else {
                                 RecipeList(
                                     recipes = state.searchResults,
                                     onRecipeClick = {
@@ -219,8 +240,9 @@ private fun RecipeListScreen(
                                 )
                             }
                         }
+
                         1 -> { // Favorites Tab
-                            if(state.favoriteRecipes.isEmpty()) {
+                            if (state.favoriteRecipes.isEmpty()) {
                                 Text("You have no favorite recipes yet.")
                             } else {
                                 RecipeList(
@@ -236,36 +258,12 @@ private fun RecipeListScreen(
                     }
                 }
             }
+            }
         }
+
     }
 
-//    ##remove
-//    if (showCreationOptions) {
-//        ModalBottomSheet(onDismissRequest = { showCreationOptions = false }) {
-//            Column(Modifier.padding(16.dp)) {
-//                Text("Create Recipe", style = MaterialTheme.typography.titleMedium)
-//                Spacer(Modifier.height(12.dp))
-//                Button(onClick = {
-//                    showCreationOptions = false
-//                    onAction(RecipeListAction.OnCreateFromImageClick)
-//                }) {
-//                    Text("From Image")
-//                }
-//                Button(onClick = {
-//                    showCreationOptions = false
-//                    onAction(RecipeListAction.OnCreateFromUrlClick)
-//                }) {
-//                    Text("From Web Link")
-//                }
-//                Button(onClick = {
-//                    showCreationOptions = false
-//                    onAction(RecipeListAction.OnCreateFromScratchClick)
-//                }) {
-//                    Text("From Scratch")
-//                }
-//            }
-//        }
-//    }
 }
+//}
 
 

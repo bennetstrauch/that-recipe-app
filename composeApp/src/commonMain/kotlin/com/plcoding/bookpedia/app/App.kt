@@ -14,12 +14,13 @@ import com.plcoding.bookpedia.recipe.presentation.recipe_edit.RecipeEditScreenRo
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.RecipeEditViewModel
 import com.plcoding.bookpedia.recipe.presentation.recipe_list.RecipeListScreenRoot
 import com.plcoding.bookpedia.recipe.presentation.recipe_list.RecipeListViewModel
+import customColorScheme
 
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun App() {
-    MaterialTheme {
+    MaterialTheme(colorScheme = customColorScheme) {
         val navController = rememberNavController()
         NavHost(
             navController = navController,
