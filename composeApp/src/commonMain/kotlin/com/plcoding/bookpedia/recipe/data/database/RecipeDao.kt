@@ -36,6 +36,15 @@ interface RecipeDao {
     @Query("DELETE FROM InstructionStepEntity WHERE recipeVersionId = :versionId")
     suspend fun deleteStepsForVersion(versionId: String)
 
+    // --- DeleteRecipe Operations ---
+    // Deletes a single version and its related ingredients/steps (since they have CASCADE onDelete)
+    @Query("DELETE FROM RecipeVersionEntity WHERE id = :versionId")
+    suspend fun deleteRecipeVersion(versionId: String)
+
+    // Deletes a recipe header, which will cascade to all its versions and their children
+    @Query("DELETE FROM RecipeHeaderEntity WHERE id = :headerId")
+    suspend fun deleteRecipeHeader(headerId: String)
+
 
     // --- Write Operations for Seeding/Saving ---
     @Upsert

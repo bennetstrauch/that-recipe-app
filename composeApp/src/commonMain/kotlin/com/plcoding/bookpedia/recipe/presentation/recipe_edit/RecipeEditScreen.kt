@@ -26,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.plcoding.bookpedia.recipe.presentation.recipe_edit.components.DeleteConfirmationDialog
+import com.plcoding.bookpedia.recipe.presentation.recipe_edit.components.DeleteMenu
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.sections.DirectionsSection
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.sections.GeneralInfoSection
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.sections.IngredientsSection
@@ -77,6 +79,9 @@ private fun RecipeEditScreen(
             }
         )
     }
+
+    DeleteConfirmationDialog(state.deleteType, onAction)
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -90,6 +95,7 @@ private fun RecipeEditScreen(
                     if (state.isSaving) {
                         CircularProgressIndicator(modifier = Modifier.padding(horizontal = 16.dp))
                     } else {
+
                         TextButton(onClick = { onAction(RecipeEditAction.OnOverwriteVersionClick) }) {
                             Text("Save")
                         }
@@ -97,6 +103,7 @@ private fun RecipeEditScreen(
                             TextButton(onClick = { onAction(RecipeEditAction.OnSaveAsNewVersionClick) }) {
                                 Text("Save as New")
                             }
+                            DeleteMenu(state, onAction)
                         }
                     }
                 }

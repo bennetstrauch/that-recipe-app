@@ -94,6 +94,22 @@ class RecipeEditViewModel(
             is RecipeEditAction.OnOverwriteVersionClick -> saveChanges()
             is RecipeEditAction.OnSaveAsNewVersionClick -> saveAsNewVersion()
 
+            // Deleting
+            is RecipeEditAction.OnShowDeleteMenu -> _state.update { it.copy(isDeleteMenuExpanded = true) }
+            is RecipeEditAction.OnDismissDeleteMenu -> _state.update { it.copy(isDeleteMenuExpanded = false) }
+            is RecipeEditAction.OnDeleteVersionClick -> {
+                _state.update { it.copy(isDeleteMenuExpanded = false, showDeleteConfirmation = true, deleteType = DeleteType.VERSION) }
+            }
+            is RecipeEditAction.OnDeleteRecipeClick -> {
+                _state.update { it.copy(isDeleteMenuExpanded = false, showDeleteConfirmation = true, deleteType = DeleteType.RECIPE) }
+            }
+            is RecipeEditAction.OnDismissDeleteConfirmation -> {
+                _state.update { it.copy(showDeleteConfirmation = false, deleteType = null) }
+            }
+            is RecipeEditAction.OnConfirmDelete -> {
+                _state.update { it.copy(showDeleteConfirmation = false) }
+                performDelete()
+            }
             else -> Unit
         }
     }
@@ -142,8 +158,8 @@ class RecipeEditViewModel(
             getRecipeDetailsUseCase(headerId, versionId)
                 .collect { result ->
                     result
-                        .onSuccess { pair ->
-                            if (pair == null) {
+                        .onSuccess { recipeFullDetails ->
+                            if (recipeFullDetails == null) {
                                 _state.update {
                                     it.copy(
                                         isLoading = false,
@@ -153,13 +169,14 @@ class RecipeEditViewModel(
                                 return@onSuccess
                             }
 
-                            val (header, version) = pair
+                            val (header, allVersions, version) = recipeFullDetails
                             _state.update {
                                 it.copy(
                                     isLoading = false,
                                     isEditing = true,
                                     recipeHeader = header,
-                                    selectedVersion = version
+                                    selectedVersion = version,
+                                    allVersions = allVersions
                                 )
                             }
                         }
@@ -373,6 +390,31 @@ private fun saveTimer(hours: Int, minutes: Int, seconds: Int) {
             } else {
                 ingredient
             }
+        }
+    }
+
+    private fun performDelete() {
+        viewModelScope.launch {
+            when (state.value.deleteType) {
+                DeleteType.VERSION -> {
+                    val versionId = state.value.selectedVersion?.id ?: return@launch
+                    recipeRepository.deleteRecipeVersion(versionId).onSuccess {
+                        // Load the recipe again to show the next available version
+                        val headerId = state.value.recipeHeader?.id ?: return@onSuccess
+//##navigate to userDetails screen
+                        _state.update { it.copy(isFinished = true) }
+                    }
+                }
+                DeleteType.RECIPE -> {
+                    val headerId = state.value.recipeHeader?.id ?: return@launch
+                    recipeRepository.deleteRecipeHeader(headerId).onSuccess {
+                        // Set a flag to trigger navigation back to the list #version?
+                        _state.update { it.copy(isFinished = true) }
+                    }
+                }
+                null -> Unit // Do nothing if delete type is not set
+            }
+            _state.update { it.copy(deleteType = null) }
         }
     }
 }

@@ -40,4 +40,13 @@ sealed interface RecipeEditAction {
     data object OnOverwriteVersionClick : RecipeEditAction
     data object OnSaveAsNewVersionClick : RecipeEditAction
     data object OnBackClick : RecipeEditAction
+
+    // Delete Actions
+    data object OnShowDeleteMenu : RecipeEditAction
+    data object OnDismissDeleteMenu : RecipeEditAction
+    data object OnDeleteVersionClick : RecipeEditAction
+    data object OnDeleteRecipeClick : RecipeEditAction
+    data object OnShowDeleteConfirmation : RecipeEditAction
+    data object OnDismissDeleteConfirmation : RecipeEditAction
+    data object OnConfirmDelete : RecipeEditAction
 }

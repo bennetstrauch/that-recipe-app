@@ -8,6 +8,15 @@ import com.plcoding.bookpedia.core.presentation.toUiText
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
+
+// ## where to put this?
+data class RecipeFullDetails(
+    val header: RecipeHeader,
+    val allVersions: List<RecipeVersion>,
+    val selectedVersion: RecipeVersion?
+)
+
+
 /**
  * A UseCase dedicated to fetching all necessary details for a recipe screen (view or edit).
  * It combines the header and version flows into a single, cohesive state.
@@ -18,29 +27,39 @@ class GetRecipeDetailsUseCase(
     operator fun invoke(
         headerId: String,
         versionId: String?
-    ): Flow<Result<Pair<RecipeHeader, RecipeVersion?>?, DataError>> {
+    ): Flow<Result<RecipeFullDetails?, DataError>> {
+
         val headerFlow = recipeRepository.getRecipeHeaderById(headerId)
         val versionsFlow = recipeRepository.getVersionsForRecipe(headerId)
 
         return combine(headerFlow, versionsFlow) { headerResult, versionsResult ->
-            // Use a let block to proceed only if the header was successful and found
-            headerResult.onSuccess { header ->
-                if (header == null) {
-                    // This is a success case where the item just doesn't exist
-                    return@combine Result.Success(null)
-                }
-
-                versionsResult.onSuccess { allVersions ->
-                    val selectedVersion = allVersions.find { it.id == versionId } ?: allVersions.firstOrNull()
-                    // Return a pair of the final header and selected version
-                    return@combine Result.Success(header to selectedVersion)
-                }
+//  Error handling
+            val headerError = (headerResult as? Result.Error)?.error
+            if (headerError != null) {
+                return@combine Result.Error(headerError)
             }
-            // If either flow has an error, propagate it.
-            // Assuming header error is more critical.
-            (headerResult as? Result.Error)
-                ?: (versionsResult as? Result.Error)
-                ?: Result.Error(DataError.Local.UNKNOWN)
+            val versionsError = (versionsResult as? Result.Error)?.error
+            if (versionsError != null) {
+                return@combine Result.Error(versionsError)
+            }
+
+            // At this point, we know both results are successful.
+            val header = (headerResult as Result.Success).data
+            val allVersions = (versionsResult as Result.Success).data
+
+            if (header == null) {
+                // Recipe not found case
+                Result.Success(null)
+            } else {
+                // Recipe found, assemble the final details object
+                val selectedVersion = allVersions.find { it.id == versionId } ?: allVersions.firstOrNull()
+                val details = RecipeFullDetails(
+                    header = header,
+                    allVersions = allVersions,
+                    selectedVersion = selectedVersion
+                )
+                Result.Success(details)
+            }
         }
     }
 }

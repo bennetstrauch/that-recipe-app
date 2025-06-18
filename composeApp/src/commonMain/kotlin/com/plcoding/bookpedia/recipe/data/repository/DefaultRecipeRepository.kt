@@ -300,4 +300,24 @@ class DefaultRecipeRepository(
     override suspend fun parseRecipeFromUrl(url: String): Result<Pair<RecipeHeader, RecipeVersion>, DataError> {
         return Result.Error(DataError.Remote.UNKNOWN)
     }
+
+    override suspend fun deleteRecipeVersion(versionId: String): EmptyResult<DataError.Local> {
+        return try {
+            dao.deleteRecipeVersion(versionId)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.Error(DataError.Local.UNKNOWN)
+        }
+    }
+
+    override suspend fun deleteRecipeHeader(headerId: String): EmptyResult<DataError.Local> {
+        return try {
+            dao.deleteRecipeHeader(headerId)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.Error(DataError.Local.UNKNOWN)
+        }
+    }
 }

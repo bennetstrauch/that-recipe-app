@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.plcoding.bookpedia.app.RecipeDetail
+import com.plcoding.bookpedia.core.domain.DataError
 import com.plcoding.bookpedia.core.domain.onError
 import com.plcoding.bookpedia.core.domain.onSuccess
 import com.plcoding.bookpedia.core.presentation.toUiText
+import com.plcoding.bookpedia.recipe.domain.GetRecipeDetailsUseCase
 import com.plcoding.bookpedia.recipe.domain.RecipeRepository
 import com.plcoding.bookpedia.recipe.domain.TimerInfo
 import com.plcoding.bookpedia.recipe.presentation.util.TimerListener
@@ -20,7 +22,8 @@ import kotlinx.coroutines.launch
 
 class RecipeDetailViewModel(
     private val recipeRepository: RecipeRepository,
-    private val savedStateHandle: SavedStateHandle
+    private val getRecipeDetailsUseCase: GetRecipeDetailsUseCase,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel(), TimerListener {
 
     private val timerManager = TimerManager(viewModelScope)
@@ -79,50 +82,35 @@ class RecipeDetailViewModel(
     }
 
 //    #unify?
-    private fun observeRecipeDetails() {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+private fun observeRecipeDetails() {
+    viewModelScope.launch {
+        _state.update { it.copy(isLoading = true) }
 
-            // Create two flows: one for the header, one for all its versions
-            val headerFlow = recipeRepository.getRecipeHeaderById(headerId)
-            val versionsFlow = recipeRepository.getVersionsForRecipe(headerId)
+        getRecipeDetailsUseCase(headerId, state.value.selectedVersion?.id)
+            .collect { result ->
+                var newState = _state.value.copy(isLoading = false)
 
-            // Use `combine` to merge the latest emissions from both flows
-            combine(headerFlow, versionsFlow) { headerResult, versionsResult ->
-                // This block runs whenever either the header or the versions change in the DB
+                result
+                    .onSuccess { details ->
+                        if (details != null) {
+                            newState = newState.copy(
+                                recipeHeader = details.header,
+                                allVersions = details.allVersions,
+                                selectedVersion = details.selectedVersion
+                            )
+                        } else {
+//                            maybe better / different error handling here: #
+                            newState = newState.copy(errorMessage = DataError.Local.NO_RECIPE_FOUND.toUiText())
+                        }
+                    }
+                    .onError { error ->
+                        newState = newState.copy(errorMessage = error.toUiText())
+                    }
 
-                var finalState = _state.value
-
-                headerResult.onSuccess { header ->
-                    finalState = finalState.copy(recipeHeader = header)
-                }.onError { error ->
-                    finalState = finalState.copy(errorMessage = error.toUiText())
-                }
-
-                versionsResult.onSuccess { versions ->
-                    // If this is the first time loading, or the selected version was deleted,
-                    // select the most recent one. Otherwise, keep the current selection.
-                    val currentSelectedId = finalState.selectedVersion?.id
-                    val newSelectedVersion =
-                        versions.find { it.id == currentSelectedId } ?: versions.firstOrNull()
-
-                    finalState = finalState.copy(
-                        allVersions = versions,
-                        selectedVersion = newSelectedVersion
-                    )
-                }.onError { error ->
-                    finalState = finalState.copy(errorMessage = error.toUiText())
-                }
-
-                // Return the combined state, ensuring isLoading is turned off
-                finalState.copy(isLoading = false)
-
-            }.collect { combinedState ->
-                // Update the UI with the final combined state
-                _state.value = combinedState
+                _state.value = newState
             }
-        }
     }
+}
 
 
     private fun selectVersion(versionId: String) {

@@ -20,9 +20,17 @@ data class RecipeEditState(
 
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
-    val isFinished: Boolean = false, // Becomes true after successful save
+    val isFinished: Boolean = false, // Becomes true after successful save or delete
     val isEditing: Boolean = false, // Becomes true after loading a recipe for editing
     val isCategorySheetOpen: Boolean = false,
+    // Delete:
+    val isDeleteMenuExpanded: Boolean = false,
+    val showDeleteConfirmation: Boolean = false,
+    val deleteType: DeleteType? = null, // Can be VERSION or RECIPE
 
     val error: UiText? = null,
 )
+
+enum class DeleteType {
+    VERSION, RECIPE
+}
