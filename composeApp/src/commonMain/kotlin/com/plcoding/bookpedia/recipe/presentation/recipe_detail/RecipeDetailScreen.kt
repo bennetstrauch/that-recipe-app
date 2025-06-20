@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
+import androidx.compose.material3.DividerDefaults.color
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,13 +20,23 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.plcoding.bookpedia.core.presentation.Brown
+import com.plcoding.bookpedia.core.presentation.DarkGreen
+import com.plcoding.bookpedia.core.presentation.LightGreen
+import com.plcoding.bookpedia.core.presentation.MediumGreen
+import com.plcoding.bookpedia.core.presentation.MediumTurquoise
+import com.plcoding.bookpedia.core.presentation.Orange
 import com.plcoding.bookpedia.core.presentation.SandYellow
+import com.plcoding.bookpedia.core.presentation.Skin
 import com.plcoding.bookpedia.recipe.domain.InstructionStep
 import com.plcoding.bookpedia.recipe.domain.RecipeVersion
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.components.DirectionStepItem
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.components.IngredientItem
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.components.MetaInfoSection
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.components.TimerItem
+import com.plcoding.bookpedia.recipe.presentation.util.SoundPlayer
+import kotlinx.coroutines.delay
+import org.koin.compose.koinInject
 
 // Stateful Root Composable
 @Composable
@@ -33,9 +44,27 @@ fun RecipeDetailScreenRoot(
     viewModel: RecipeDetailViewModel,
     onBackClick: () -> Unit,
     onEditClick: (recipeHeaderId: String, recipeVersionId: String) -> Unit,
-    prepTimerStepId: String = RecipeDetailViewModel.PREP_TIMER_STEP_ID
+    prepTimerStepId: String = RecipeDetailViewModel.PREP_TIMER_STEP_ID,
+    soundPlayer: SoundPlayer = koinInject()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    // 2. Event-Listener:
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is RecipeDetailEvent.PlayAlarmSound -> {
+                    // When the ViewModel sends the event, the UI reacts and plays the sound.
+                    soundPlayer.playSound()
+                    delay(800)
+                    soundPlayer.playSound()
+                    delay(800)
+                    soundPlayer.playSound()
+                }
+
+            }
+        }
+    }
 
     RecipeDetailScreen(
         state = state,
@@ -61,6 +90,10 @@ private fun RecipeDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MediumGreen.copy(0.3f)
+                ),
+
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(state.recipeHeader?.title ?: "Loading...")
@@ -144,7 +177,7 @@ private fun RecipeDetailScreen(
                     .fillMaxSize()
                     .padding(paddingValues),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 // --- Picture Section can be added here ---
                 // item {
@@ -157,18 +190,37 @@ private fun RecipeDetailScreen(
                 // }
 
                 // --- Ingredients Section ---
+
                 item {
-                    Text("Ingredients", style = MaterialTheme.typography.titleLarge)
+                    Card(modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor= Skin.copy(0.2f)),
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+
+                            Text(
+                                "Ingredients",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MediumTurquoise
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            // Use a simple Column for ingredients as they are part of the 'item' scope
+                            // and not directly within LazyColumn's items block here.
+                            Column {
+                                state.selectedVersion.ingredients.forEach { ingredient ->
+                                    IngredientItem(
+                                        ingredient = ingredient,
+                                        isChecked = ingredient.id in state.checkedIngredientIds,
+                                        onCheckedChange = {
+                                            onAction(RecipeDetailAction.OnToggleIngredientCheck(ingredient.id))
+                                        }
+                                    )
+                                }
+                            }
+                         }
+                    }
                 }
-                items(state.selectedVersion.ingredients) { ingredient ->
-                    IngredientItem(
-                        ingredient = ingredient,
-                        isChecked = ingredient.id in state.checkedIngredientIds,
-                        onCheckedChange = {
-                            onAction(RecipeDetailAction.OnToggleIngredientCheck(ingredient.id))
-                        }
-                    )
-                }
+
+
 
                 // --- Directions Section ---
                 item {

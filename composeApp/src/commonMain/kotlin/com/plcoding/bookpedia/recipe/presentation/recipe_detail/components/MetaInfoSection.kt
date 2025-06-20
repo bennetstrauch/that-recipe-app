@@ -18,10 +18,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailAction
-import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import com.plcoding.bookpedia.core.presentation.DarkerMediumGreen
+import com.plcoding.bookpedia.core.presentation.LightGreen
 
 @Composable
 fun MetaInfoSection(
@@ -35,7 +36,8 @@ fun MetaInfoSection(
     // Use a Card for better visual grouping
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = LightGreen.copy(alpha = 0.3f), )
     ) {
         Column(
             modifier = Modifier

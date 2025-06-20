@@ -35,7 +35,13 @@ kotlin {
         }
     }
     
-    jvm("desktop")
+    jvm("desktop"){
+        compilations.all {
+            kotlinOptions.jvmTarget = "17" // or "11" to match androidTarget
+            kotlinOptions.freeCompilerArgs += "-Xexpect-actual-classes"
+
+        }
+    }
 
     room {
         schemaDirectory("$projectDir/schemas")
@@ -88,6 +94,8 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.okhttp)
+            implementation("androidx.sqlite:sqlite-jvm:2.4.0") // Use the latest version
+
         }
         nativeMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -95,6 +103,7 @@ kotlin {
 
         dependencies {
             ksp(libs.androidx.room.compiler)
+
         }
     }
 }
@@ -141,11 +150,17 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+
+//    add("kspAndroid", libs.androidx.room.compiler)
+//  #use this istead of deprecation in common
+//    // For the Desktop target
+//    add("kspDesktop", libs.androidx.room.compiler)
+
 }
 
 compose.desktop {
     application {
-        mainClass = "com.plcoding.bookpedia.MainKt"
+        mainClass = "com.plcoding.bookpedia.DesktopKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
@@ -154,4 +169,5 @@ compose.desktop {
         }
     }
 }
+
 

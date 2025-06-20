@@ -18,6 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.plcoding.bookpedia.core.presentation.LightGreen
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.components.DeleteConfirmationDialog
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.components.DeleteMenu
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.sections.DirectionsSection
@@ -85,6 +87,11 @@ private fun RecipeEditScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+//                remove duplication between this and detilsscreen #
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = LightGreen.copy(0.3f)
+                ),
+
                 title = { Text(if (state.isEditing) "Edit Recipe" else "New Recipe") },
                 navigationIcon = {
                     IconButton(onClick = { onAction(RecipeEditAction.OnBackClick) }) {

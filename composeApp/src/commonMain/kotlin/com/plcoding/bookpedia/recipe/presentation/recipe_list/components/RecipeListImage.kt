@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DinnerDining
+import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.RiceBowl
 import androidx.compose.material.icons.filled.SoupKitchen
@@ -93,7 +94,7 @@ fun RecipeImage(
                 } else {
                     // State: Failure
                     Icon(
-                        imageVector = Icons.Default.RiceBowl,
+                        imageVector = Icons.Default.Fastfood,
                         contentDescription = "Recipe Image",
                         modifier = Modifier.size(60.dp),
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)

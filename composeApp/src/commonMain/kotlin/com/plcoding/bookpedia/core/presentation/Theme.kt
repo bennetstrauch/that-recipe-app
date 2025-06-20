@@ -1,5 +1,6 @@
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
+import com.plcoding.bookpedia.core.presentation.DarkerMediumGreen
 import com.plcoding.bookpedia.core.presentation.MediumGreen
 
 val customColorScheme = lightColorScheme(
@@ -9,7 +10,7 @@ val customColorScheme = lightColorScheme(
     onSecondary = Color.Black,
     surface = Color.White,
     onSurface = Color.Black,
-    surfaceVariant = Color(0xFF00906C),
+    surfaceVariant = DarkerMediumGreen,
     background = Color.White,
     onBackground = Color.Black,
     error = Color(0xFFB00020),

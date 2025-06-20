@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailAction
+import com.plcoding.bookpedia.recipe.presentation.util.Timer
 import com.plcoding.bookpedia.recipe.presentation.util.formatDuration
 
 //##passing too many values, how to improve? wrap in object?
@@ -32,7 +33,7 @@ fun TimerItem(
         when {
             isRunning && !isPaused -> {
                 Text(
-                    text = formatDuration(remainingSeconds),
+                    text = formatDuration(remainingSeconds, Timer.DISPLAY_1_MINUTE_OFFSET),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
@@ -43,7 +44,7 @@ fun TimerItem(
             }
             remainingSeconds > 0 -> {
                 Text(
-                    text = formatDuration(remainingSeconds),
+                    text = formatDuration(remainingSeconds, Timer.DISPLAY_1_MINUTE_OFFSET),
                     style = MaterialTheme.typography.titleMedium
                 )
                 IconButton(onClick = onResume) {

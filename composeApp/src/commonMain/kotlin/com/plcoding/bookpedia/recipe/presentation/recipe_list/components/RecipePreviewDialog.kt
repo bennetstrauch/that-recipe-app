@@ -135,13 +135,14 @@ fun RecipePreviewDialog(
                         TextButton(onClick = onDismiss, enabled = !isParsing) {
                             Text("Cancel")
                         }
-                        Button(onClick = onParse, enabled = !isParsing && webViewState.lastLoadedUrl != null) {
-                            if (isParsing) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                            } else {
-                                Text("Parse this Page")
-                            }
-                        }
+//                        ## for later on
+//                        Button(onClick = onParse, enabled = !isParsing && webViewState.lastLoadedUrl != null) {
+//                            if (isParsing) {
+//                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+//                            } else {
+//                                Text("Parse this Page")
+//                            }
+//                        }
                     }
                 }
             }

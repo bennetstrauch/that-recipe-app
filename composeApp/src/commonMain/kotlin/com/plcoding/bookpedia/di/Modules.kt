@@ -10,6 +10,7 @@ import com.plcoding.bookpedia.recipe.domain.RecipeRepository
 import com.plcoding.bookpedia.recipe.presentation.recipe_detail.RecipeDetailViewModel
 import com.plcoding.bookpedia.recipe.presentation.recipe_edit.RecipeEditViewModel
 import com.plcoding.bookpedia.recipe.presentation.recipe_list.RecipeListViewModel
+import com.plcoding.bookpedia.recipe.presentation.util.SoundPlayer
 
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
@@ -21,6 +22,7 @@ expect val platformModule: Module
 
 val sharedModule = module {
     singleOf(::DefaultRecipeRepository).bind<RecipeRepository>()
+
 
     viewModelOf(::RecipeListViewModel)
     viewModelOf(::RecipeDetailViewModel)

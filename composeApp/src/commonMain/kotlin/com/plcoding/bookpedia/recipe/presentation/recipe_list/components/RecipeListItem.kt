@@ -104,18 +104,21 @@ fun RecipeListItem(
                             text = recipe.category.name + " | ",
                             style = MaterialTheme.typography.bodyLarge
                         )
-                        Icon(
-                            imageVector = Icons.Outlined.Timer,
-                            contentDescription = null,
-                            tint = SandYellow
-                        )
 
-                       Text (
-                           text = recipe.defaultPrepTimeMinutes.toString(),
-                           style = MaterialTheme.typography.bodyLarge.copy(
-                               fontWeight = FontWeight.Bold
-                           )
-                        )
+                        if (recipe.defaultPrepTimeMinutes != null) {
+                            Icon(
+                                imageVector = Icons.Outlined.Timer,
+                                contentDescription = null,
+                                tint = SandYellow
+                            )
+
+                            Text(
+                                text = recipe.defaultPrepTimeMinutes.toString(),
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
                     }
 
             }

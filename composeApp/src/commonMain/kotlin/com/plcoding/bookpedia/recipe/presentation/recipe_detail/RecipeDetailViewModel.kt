@@ -12,6 +12,7 @@ import com.plcoding.bookpedia.core.presentation.toUiText
 import com.plcoding.bookpedia.recipe.domain.GetRecipeDetailsUseCase
 import com.plcoding.bookpedia.recipe.domain.RecipeRepository
 import com.plcoding.bookpedia.recipe.domain.TimerInfo
+import com.plcoding.bookpedia.recipe.presentation.util.SoundPlayer
 import com.plcoding.bookpedia.recipe.presentation.util.TimerListener
 import com.plcoding.bookpedia.recipe.presentation.util.TimerManager
 import com.plcoding.bookpedia.recipe.presentation.util.minutesToTimerInfo
@@ -24,6 +25,7 @@ class RecipeDetailViewModel(
     private val recipeRepository: RecipeRepository,
     private val getRecipeDetailsUseCase: GetRecipeDetailsUseCase,
     private val savedStateHandle: SavedStateHandle,
+    private val soundPlayer: SoundPlayer
 ) : ViewModel(), TimerListener {
 
     private val timerManager = TimerManager(viewModelScope)
@@ -38,6 +40,9 @@ class RecipeDetailViewModel(
 
     private val _state = MutableStateFlow(RecipeDetailState())
     val state = _state.asStateFlow()
+    // EventState:
+    private val _eventFlow = MutableSharedFlow<RecipeDetailEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
 
 //    ?#
     private val headerId: String
@@ -208,6 +213,9 @@ private fun observeRecipeDetails() {
 
 
     private fun playAlarm() {
-        // Platform-specific solution — pass callback to UI or use shared logic if possible
+        // Platform-specific solution
+        viewModelScope.launch {
+            _eventFlow.emit(RecipeDetailEvent.PlayAlarmSound)
+        }
     }
 }
